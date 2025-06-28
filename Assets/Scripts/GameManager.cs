@@ -356,7 +356,7 @@ public class GameManager : MonoBehaviour
         if (bookMove.HasValue)
         {
             // Add delay before making the book move
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(0.1f);
             
             ClearMoveTrails();
             var fromTrail = Instantiate(trail, new Vector3(bookMove.Value.fromCol, 7 - bookMove.Value.fromRow, 0), Quaternion.identity);
@@ -1619,6 +1619,8 @@ public class GameManager : MonoBehaviour
         enPassantCol = -1;
         enPassantRow = -1;
         // Stop all running coroutines
+        moveHistory.Clear();
+        
         StopAllCoroutines();
 
         // Reset game state
