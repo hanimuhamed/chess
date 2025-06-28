@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.VFX;
 using static UnityEngine.Rendering.DebugUI.Table;
+using UnityEngine.UI;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -62,6 +64,10 @@ public class GameManager : MonoBehaviour
     public GameObject button;
     private SpriteRenderer sr;
     public static int move = 0;
+
+    public TextMeshProUGUI message;
+
+    public GameObject darkSquare;
 
     //private Camera cam;
     //public float rotTime = 1.5f;
@@ -120,7 +126,6 @@ public class GameManager : MonoBehaviour
         { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}
 
     };
-
     // Store the initial board state for opening detection
     private static readonly char[,] initialBoardWhite = {
         { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
@@ -199,8 +204,7 @@ public class GameManager : MonoBehaviour
     private static string winnerMessage = "";
 
     private void Awake()
-    {
-
+    { 
         placeButton = placeButtonSprite;
         currentButton = currentButtonSprite;
         trail = trailSprite;
@@ -208,6 +212,8 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
+        message.text = winnerMessage;
+        darkSquare.SetActive(false);
         elseSquare.SetActive(false);
         playAsWhiteStatic = playAsWhite;
         StaticCaptureColor = captureColor;
@@ -219,16 +225,21 @@ public class GameManager : MonoBehaviour
         InitPieces();
         InitializePlaceButtonPool();
     }
-    private bool isBotThinking = false; private bool waitingForNextFrame = false; private void Update()
+    private bool isBotThinking = false;
+     private bool waitingForNextFrame = false;
+    private void Update()
     {
         if (gameOver)
         {
             // When game is over, deactivate the selection square and return
+            message.text = winnerMessage;
+            darkSquare.SetActive(true);
             if (elseSquare.activeSelf)
             {
                 elseSquare.SetActive(false);
             }
             return;
+
         }
 
         if (isMoving)
@@ -290,12 +301,12 @@ public class GameManager : MonoBehaviour
                 if (IsInCheck(true, chessBoard))
                 {
                     gameOver = true;
-                    winnerMessage = "Checkmate! Black wins!";
+                    winnerMessage = "Checkmate!\nBlack wins!";
                 }
                 else
                 {
                     gameOver = true;
-                    winnerMessage = "Stalemate! Game is a draw.";
+                    winnerMessage = "Stalemate!\nGame is a draw.";
                 }
                 return;
             }
@@ -420,7 +431,7 @@ public class GameManager : MonoBehaviour
             if (IsInCheck(false, boardCopy))
             {
                 gameOver = true;
-                winnerMessage = "Checkmate! White wins!";
+                winnerMessage = "Checkmate!\nWhite wins!";
                 isBotThinking = false;
                 yield break;
             }
@@ -428,7 +439,7 @@ public class GameManager : MonoBehaviour
             {
                 // Stalemate
                 gameOver = true;
-                winnerMessage = "Stalemate! Game is a draw.";
+                winnerMessage = "Stalemate!\nGame is a draw.";
                 isBotThinking = false;
                 yield break;
             }
@@ -1396,7 +1407,7 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
-    void OnGUI()
+    /*void OnGUI()
     {
         if (gameOver)
         {
@@ -1413,7 +1424,7 @@ public class GameManager : MonoBehaviour
             GUI.color = Color.white;
             GUI.Label(new Rect(Screen.width / 2 - 100, Screen.height / 2 - 25, 200, 50), winnerMessage, style);
         }
-    }
+    }*/
 
     private string GetSquareNotation(int row, int col)
     {
@@ -1614,9 +1625,12 @@ public class GameManager : MonoBehaviour
         move = 0;
         gameOver = false;
         winnerMessage = "";
+        message.text = winnerMessage;
         isMoving = false;
         isBotThinking = false;
         waitingForNextFrame = false;
+
+        darkSquare.SetActive(false);
 
         // Reset castling flags
         whiteKingMoved = false;

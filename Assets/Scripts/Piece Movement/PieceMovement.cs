@@ -11,10 +11,11 @@ public class PieceMovement : MonoBehaviour
     List<Vector3> positions;
     PieceColor pc;
     char[] moveableList;
-    public enum Piece {
+    public enum Piece
+    {
         Pawn,
         Rook,
-        Knight,     
+        Knight,
         Bishop,
         Queen,
         King
@@ -22,10 +23,11 @@ public class PieceMovement : MonoBehaviour
 
     public Piece piece;
 
-    private void Start() {
-        pc = GetComponent<PieceColor>();     
+    private void Start()
+    {
+        pc = GetComponent<PieceColor>();
     }
-    
+
     private bool IsKingSafeAfterMove(int fromX, int fromY, int toX, int toY)
     {
         // Create a temporary board to simulate the move
@@ -39,7 +41,8 @@ public class PieceMovement : MonoBehaviour
         tempBoard[7 - fromY, fromX] = ' ';
         tempBoard[7 - toY, toX] = piece;        // Create GameManager instance and use minimax with depth 1 to see if opponent can capture king
         GameManager gameManager = FindObjectOfType<GameManager>();
-        if (gameManager == null) {
+        if (gameManager == null)
+        {
             Debug.LogError("Could not find GameManager instance!");
             return false;
         }        // Check if this move would put or leave our king in check
@@ -98,8 +101,8 @@ public class PieceMovement : MonoBehaviour
         GameManager.prevX = x;
 
         GameObject currentButton = GameManager.currentButton;
-        GameManager.positionList.Add(Instantiate(currentButton, new Vector3(transform.position.x, transform.position.y, -2.5f), Quaternion.identity));
-        
+        GameManager.positionList.Add(Instantiate(currentButton, new Vector3(x, y, -2.5f), Quaternion.identity));
+
         foreach (Vector3 pos in positions)
         {
             if (pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8)
@@ -110,7 +113,7 @@ public class PieceMovement : MonoBehaviour
                     {
                         //Debug.Log(GameManager.chessBoard[7 - (int)pos.y, (int)pos.x]);                        GameObject placeButton = GameManager.placeButton;
                         // Check if this is an en passant move
-                        bool isEnPassant = piece == Piece.Pawn && 
+                        bool isEnPassant = piece == Piece.Pawn &&
                                          GameManager.enPassantPossible &&
                                          (int)pos.x == GameManager.enPassantCol &&
                                          7 - (int)pos.y == GameManager.enPassantRow;
@@ -134,9 +137,11 @@ public class PieceMovement : MonoBehaviour
         }
     }
 
-    List<Vector3> GetLegalMoves(int x, int y, Piece piece) {
+    List<Vector3> GetLegalMoves(int x, int y, Piece piece)
+    {
         int z = -3;
-        switch (piece) {
+        switch (piece)
+        {
 
             case Piece.Knight:
                 positions = new List<Vector3> {
@@ -150,19 +155,22 @@ public class PieceMovement : MonoBehaviour
                     new Vector3(x + 2, y + 1, z)
                 };
                 break;
-            case Piece.Pawn: {
-                positions = new List<Vector3> { };
-                int j = pc.isWhite ? 1 : -1;
-                // Normal forward moves
-                if (GameManager.chessBoard[7 - (y + j), x] == ' ') {
-                    positions.Add(new Vector3(x, y + j, z));
-                    if (y == (int) (-2.5f * j + 3.5f) && (GameManager.chessBoard[7 - (y + (j * 2)), x] == ' ')) {
-                        positions.Add(new Vector3(x, y + (j * 2), z));
+            case Piece.Pawn:
+                {
+                    positions = new List<Vector3> { };
+                    int j = pc.isWhite ? 1 : -1;
+                    // Normal forward moves
+                    if (GameManager.chessBoard[7 - (y + j), x] == ' ')
+                    {
+                        positions.Add(new Vector3(x, y + j, z));
+                        if (y == (int)(-2.5f * j + 3.5f) && (GameManager.chessBoard[7 - (y + (j * 2)), x] == ' '))
+                        {
+                            positions.Add(new Vector3(x, y + (j * 2), z));
+                        }
                     }
-                }
                     // Regular captures and en passant
-                Debug.Log(GameManager.enPassantPossible);
-                foreach (int i in new int[] { -1, 1 })
+                    Debug.Log(GameManager.enPassantPossible);
+                    foreach (int i in new int[] { -1, 1 })
                     {
                         try
                         {
@@ -181,83 +189,109 @@ public class PieceMovement : MonoBehaviour
                             }
                         }
                         catch (IndexOutOfRangeException) { }
-                        ;
-                    }     
-                break;
-            }
+                            ;
+                    }
+                    break;
+                }
 
             case Piece.Rook:
-                positions = new List<Vector3> { }; 
-                foreach (int i in new int[] { -1, 1 }) {
+                positions = new List<Vector3> { };
+                foreach (int i in new int[] { -1, 1 })
+                {
                     int up = 0;
-                    try {
-                        do {
+                    try
+                    {
+                        do
+                        {
                             up++;
                             positions.Add(new Vector3(x, y + (up * i), z));
                         } while (GameManager.chessBoard[7 - (y + (up * i)), x] == ' ');
                     }
-                    catch (IndexOutOfRangeException) { };
+                    catch (IndexOutOfRangeException) { }
+                    ;
                 }
-                foreach (int i in new int[] { -1, 1 }) {
+                foreach (int i in new int[] { -1, 1 })
+                {
                     int right = 0;
-                    try {
-                        do {
+                    try
+                    {
+                        do
+                        {
                             right++;
                             positions.Add(new Vector3(x + (right * i), y, z));
                         } while (GameManager.chessBoard[7 - y, x + (right * i)] == ' ');
                     }
-                    catch (IndexOutOfRangeException) { };
+                    catch (IndexOutOfRangeException) { }
+                    ;
                 }
                 break;
 
             case Piece.Bishop:
                 positions = new List<Vector3> { };
-                foreach (int i in new int[] { -1, 1 }) {
-                    foreach (int j in new int[] { -1, 1 }) {
+                foreach (int i in new int[] { -1, 1 })
+                {
+                    foreach (int j in new int[] { -1, 1 })
+                    {
                         int dir = 0;
-                        try {
-                            do {
+                        try
+                        {
+                            do
+                            {
                                 dir++;
                                 positions.Add(new Vector3(x + (dir * j), y + (dir * i), z));
                             } while (GameManager.chessBoard[7 - (y + (dir * i)), (x + (dir * j))] == ' ');
                         }
-                        catch (IndexOutOfRangeException) { };
+                        catch (IndexOutOfRangeException) { }
+                        ;
                     }
                 }
                 break;
 
             case Piece.Queen:
                 positions = new List<Vector3> { };
-                foreach (int i in new int[] { -1, 1 }) {
+                foreach (int i in new int[] { -1, 1 })
+                {
                     int up = 0;
-                    try {
-                        do {
+                    try
+                    {
+                        do
+                        {
                             up++;
                             positions.Add(new Vector3(x, y + (up * i), z));
                         } while (GameManager.chessBoard[7 - (y + (up * i)), x] == ' ');
                     }
-                    catch (IndexOutOfRangeException) { };
+                    catch (IndexOutOfRangeException) { }
+                    ;
                 }
-                foreach (int i in new int[] { -1, 1 }) {
+                foreach (int i in new int[] { -1, 1 })
+                {
                     int right = 0;
-                    try {
-                        do {
+                    try
+                    {
+                        do
+                        {
                             right++;
                             positions.Add(new Vector3(x + (right * i), y, z));
                         } while (GameManager.chessBoard[7 - y, x + (right * i)] == ' ');
                     }
-                    catch (IndexOutOfRangeException) { };
+                    catch (IndexOutOfRangeException) { }
+                    ;
                 }
-                foreach (int i in new int[] { -1, 1 }) {
-                    foreach (int j in new int[] { -1, 1 }) {
+                foreach (int i in new int[] { -1, 1 })
+                {
+                    foreach (int j in new int[] { -1, 1 })
+                    {
                         int dir = 0;
-                        try {
-                            do {
+                        try
+                        {
+                            do
+                            {
                                 dir++;
                                 positions.Add(new Vector3(x + (dir * j), y + (dir * i), z));
                             } while (GameManager.chessBoard[7 - (y + (dir * i)), (x + (dir * j))] == ' ');
                         }
-                        catch (IndexOutOfRangeException) { };
+                        catch (IndexOutOfRangeException) { }
+                        ;
                     }
                 }
                 break;
@@ -277,51 +311,67 @@ public class PieceMovement : MonoBehaviour
                 };
                 bool canKingsideCastle = false;
                 bool canQueensideCastle = false;
-                  // Can't castle if king is in check
+                // Can't castle if king is in check
                 if (GameManager.IsInCheck(pc.isWhite, GameManager.chessBoard))
                 {
                     canKingsideCastle = false;
                     canQueensideCastle = false;
-                }                else if (pc.isWhite && y == 0) {  // White king at starting position
+                }
+                else if (pc.isWhite && y == 0)
+                {  // White king at starting position
                     // Check if king hasn't moved - find king position in first rank
-                    if (!GameManager.whiteKingMoved) {
+                    if (!GameManager.whiteKingMoved)
+                    {
                         int kingCol = -1;
                         // Find king's column position in the back rank
-                        for (int col = 0; col < 8; col++) {
-                            if (GameManager.chessBoard[7, col] == 'K') {
+                        for (int col = 0; col < 8; col++)
+                        {
+                            if (GameManager.chessBoard[7, col] == 'K')
+                            {
                                 kingCol = col;
                                 break;
                             }
                         }
-                        if (kingCol != -1) {  // Found the king
+                        if (kingCol != -1)
+                        {  // Found the king
                             // Check kingside castling - look for rook on king's right
-                            if (!GameManager.whiteRightRookMoved) {
+                            if (!GameManager.whiteRightRookMoved)
+                            {
                                 bool pathClear = true;
-                                for (int col = kingCol + 1; col < 7; col++) {
-                                    if (GameManager.chessBoard[7, col] != ' ') {
+                                for (int col = kingCol + 1; col < 7; col++)
+                                {
+                                    if (GameManager.chessBoard[7, col] != ' ')
+                                    {
                                         pathClear = false;
                                         break;
                                     }
                                 }
-                                if (pathClear && GameManager.chessBoard[7, 7] == 'R') {
-                                    if (!IsSquareUnderAttack(7, kingCol + 1, true) && 
-                                        !IsSquareUnderAttack(7, kingCol + 2, true)) {
+                                if (pathClear && GameManager.chessBoard[7, 7] == 'R')
+                                {
+                                    if (!IsSquareUnderAttack(7, kingCol + 1, true) &&
+                                        !IsSquareUnderAttack(7, kingCol + 2, true))
+                                    {
                                         canKingsideCastle = true;
                                     }
                                 }
                             }
                             // Check queenside castling - look for rook on king's left
-                            if (!GameManager.whiteLeftRookMoved) {
+                            if (!GameManager.whiteLeftRookMoved)
+                            {
                                 bool pathClear = true;
-                                for (int col = kingCol - 1; col > 0; col--) {
-                                    if (GameManager.chessBoard[7, col] != ' ') {
+                                for (int col = kingCol - 1; col > 0; col--)
+                                {
+                                    if (GameManager.chessBoard[7, col] != ' ')
+                                    {
                                         pathClear = false;
                                         break;
                                     }
                                 }
-                                if (pathClear && GameManager.chessBoard[7, 0] == 'R') {
-                                    if (!IsSquareUnderAttack(7, kingCol - 1, true) && 
-                                        !IsSquareUnderAttack(7, kingCol - 2, true)) {
+                                if (pathClear && GameManager.chessBoard[7, 0] == 'R')
+                                {
+                                    if (!IsSquareUnderAttack(7, kingCol - 1, true) &&
+                                        !IsSquareUnderAttack(7, kingCol - 2, true))
+                                    {
                                         canQueensideCastle = true;
                                     }
                                 }
@@ -329,46 +379,61 @@ public class PieceMovement : MonoBehaviour
                         }
                     }
                 }
-                else if (!pc.isWhite && y == 7) {  // Black king at starting position
+                else if (!pc.isWhite && y == 7)
+                {  // Black king at starting position
                     // Check if king hasn't moved - find king position in first rank
-                    if (!GameManager.blackKingMoved) {
+                    if (!GameManager.blackKingMoved)
+                    {
                         int kingCol = -1;
                         // Find king's column position in the back rank
-                        for (int col = 0; col < 8; col++) {
-                            if (GameManager.chessBoard[0, col] == 'k') {
+                        for (int col = 0; col < 8; col++)
+                        {
+                            if (GameManager.chessBoard[0, col] == 'k')
+                            {
                                 kingCol = col;
                                 break;
                             }
                         }
-                        if (kingCol != -1) {  // Found the king
+                        if (kingCol != -1)
+                        {  // Found the king
                             // Check kingside castling - look for rook on king's right
-                            if (!GameManager.blackRightRookMoved) {
+                            if (!GameManager.blackRightRookMoved)
+                            {
                                 bool pathClear = true;
-                                for (int col = kingCol + 1; col < 7; col++) {
-                                    if (GameManager.chessBoard[0, col] != ' ') {
+                                for (int col = kingCol + 1; col < 7; col++)
+                                {
+                                    if (GameManager.chessBoard[0, col] != ' ')
+                                    {
                                         pathClear = false;
                                         break;
                                     }
                                 }
-                                if (pathClear && GameManager.chessBoard[0, 7] == 'r') {
-                                    if (!IsSquareUnderAttack(0, kingCol + 1, false) && 
-                                        !IsSquareUnderAttack(0, kingCol + 2, false)) {
+                                if (pathClear && GameManager.chessBoard[0, 7] == 'r')
+                                {
+                                    if (!IsSquareUnderAttack(0, kingCol + 1, false) &&
+                                        !IsSquareUnderAttack(0, kingCol + 2, false))
+                                    {
                                         canKingsideCastle = true;
                                     }
                                 }
                             }
                             // Check queenside castling - look for rook on king's left
-                            if (!GameManager.blackLeftRookMoved) {
+                            if (!GameManager.blackLeftRookMoved)
+                            {
                                 bool pathClear = true;
-                                for (int col = kingCol - 1; col > 0; col--) {
-                                    if (GameManager.chessBoard[0, col] != ' ') {
+                                for (int col = kingCol - 1; col > 0; col--)
+                                {
+                                    if (GameManager.chessBoard[0, col] != ' ')
+                                    {
                                         pathClear = false;
                                         break;
                                     }
                                 }
-                                if (pathClear && GameManager.chessBoard[0, 0] == 'r') {
-                                    if (!IsSquareUnderAttack(0, kingCol - 1, false) && 
-                                        !IsSquareUnderAttack(0, kingCol - 2, false)) {
+                                if (pathClear && GameManager.chessBoard[0, 0] == 'r')
+                                {
+                                    if (!IsSquareUnderAttack(0, kingCol - 1, false) &&
+                                        !IsSquareUnderAttack(0, kingCol - 2, false))
+                                    {
                                         canQueensideCastle = true;
                                     }
                                 }
@@ -377,10 +442,12 @@ public class PieceMovement : MonoBehaviour
                     }
                 }
 
-                if (canKingsideCastle) {
+                if (canKingsideCastle)
+                {
                     positions.Add(new Vector3(x + 2, y, z));
                 }
-                if (canQueensideCastle) {
+                if (canQueensideCastle)
+                {
                     positions.Add(new Vector3(x - 2, y, z));
                 }
                 break;
@@ -402,5 +469,20 @@ public class PieceMovement : MonoBehaviour
 
         // If the king would be in check on that square, then the square is under attack
         return GameManager.IsInCheck(isWhiteKing, tempBoard);
+    }
+
+    private float scale = 0.11111f;
+    private void OnMouseEnter()
+    {
+        if (!pc.isWhite) return;
+        transform.localScale = Vector3.one * (1.0f + scale);
+        transform.position += Vector3.up * (scale / 2); // Slightly raise the piece for better visibility
+    }
+
+    private void OnMouseExit()
+    {
+        if (!pc.isWhite) return;
+        transform.localScale = Vector3.one;
+        transform.position -= Vector3.up * (scale / 2);
     }
 }
