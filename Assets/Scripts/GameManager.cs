@@ -306,6 +306,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private Coroutine botMoveCoroutine;
+
     private IEnumerator WaitForUIUpdate()
     {
         // Wait for two frames to ensure all UI elements are updated
@@ -321,8 +323,10 @@ public class GameManager : MonoBehaviour
 
         waitingForNextFrame = false;
         isBotThinking = true;
-        StartCoroutine(MakeBotMoveCoroutine());
+        botMoveCoroutine = StartCoroutine(MakeBotMoveCoroutine());
     }
+
+
     private IEnumerator MakeBotMoveCoroutine()
     {
         // Wait for end of frame to ensure all previous updates are complete
@@ -1595,7 +1599,9 @@ public class GameManager : MonoBehaviour
         }
 
         return false;
-    }    public void Restart()
+    }    
+    
+    public void Restart()
     {
         // Reset en passant state
         enPassantPossible = false;
@@ -1695,5 +1701,109 @@ public class GameManager : MonoBehaviour
         }
         
         return true;
+    }
+
+    // Move history for undo functionality
+    private class MoveState
+    {
+        public char[,] boardState;
+        public bool wasEnPassantPossible;
+        public int lastEnPassantCol;
+        public int lastEnPassantRow;
+        public GameObject[,] piecesState;
+        public bool wasWhiteKingMoved;
+        public bool wasBlackKingMoved;
+        public bool wasWhiteLeftRookMoved;
+        public bool wasBlackLeftRookMoved;
+        public bool wasWhiteRightRookMoved;
+        public bool wasBlackRightRookMoved;
+        public int moveNumber;
+
+        public MoveState(char[,] board, GameObject[,] pieces)
+        {
+            boardState = new char[8, 8];
+            piecesState = new GameObject[8, 8];
+            System.Array.Copy(board, boardState, board.Length);
+            
+            // Deep copy of piece references
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    piecesState[i, j] = pieces[i, j];
+
+            // Copy current game state
+            wasEnPassantPossible = enPassantPossible;
+            lastEnPassantCol = enPassantCol;
+            lastEnPassantRow = enPassantRow;
+            wasWhiteKingMoved = whiteKingMoved;
+            wasBlackKingMoved = blackKingMoved;
+            wasWhiteLeftRookMoved = whiteLeftRookMoved;
+            wasBlackLeftRookMoved = blackLeftRookMoved;
+            wasWhiteRightRookMoved = whiteRightRookMoved;
+            wasBlackRightRookMoved = blackRightRookMoved;
+            moveNumber = move;
+        }
+    }
+
+    private static Stack<MoveState> moveHistory = new Stack<MoveState>();
+
+    // Store the current state before making a move
+    public static void SaveState()
+    {
+        moveHistory.Push(new MoveState(chessBoard, pieceList));
+    }
+
+    public void Undo()
+    {
+        if (moveHistory.Count == 0)
+            return;
+
+        // Stop the bot's move coroutine if it's running
+        if (isBotThinking && botMoveCoroutine != null)
+        {
+            StopCoroutine(botMoveCoroutine);
+            botMoveCoroutine = null;
+            isBotThinking = false;
+            waitingForNextFrame = false;
+        }
+
+        // Get the previous state
+        MoveState previousState = moveHistory.Pop();
+
+        // Clear current trails
+        ClearMoveTrails();
+
+        RemoveAllPieces();
+
+        foreach (GameObject place in GameManager.positionList)
+        {
+            Destroy(place);
+        }
+
+        // Restore the board and pieces state
+        chessBoard = previousState.boardState;
+        pieceList = previousState.piecesState;
+
+        // Restore game state
+        enPassantPossible = previousState.wasEnPassantPossible;
+        enPassantCol = previousState.lastEnPassantCol;
+        enPassantRow = previousState.lastEnPassantRow;
+        whiteKingMoved = previousState.wasWhiteKingMoved;
+        blackKingMoved = previousState.wasBlackKingMoved;
+        whiteLeftRookMoved = previousState.wasWhiteLeftRookMoved;
+        blackLeftRookMoved = previousState.wasBlackLeftRookMoved;
+        whiteRightRookMoved = previousState.wasWhiteRightRookMoved;
+        blackRightRookMoved = previousState.wasBlackRightRookMoved;
+        move = previousState.moveNumber;
+
+        // Visual update
+        Refresh();
+        Debug.Log("Move undone");
+
+        // When undoing to before a checkmate/stalemate
+        if (gameOver)
+        {
+            gameOver = false;
+            winnerMessage = "";
+        }
     }
 }

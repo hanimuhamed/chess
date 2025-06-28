@@ -11,6 +11,8 @@ public class PlaceButton : MonoBehaviour {
     }
     private void OnMouseDown()
     {
+
+        GameManager.SaveState();
         // Get the moving piece
         char movingPiece = GameManager.chessBoard[7 - GameManager.prexY, GameManager.prevX];
 

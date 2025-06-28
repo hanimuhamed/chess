@@ -48,6 +48,42 @@ public class PieceMovement : MonoBehaviour
     private void OnMouseDown()
     {
         Debug.Log("clicked");
+
+        if (GameManager.chessBoard[7, 4] != 'K' && GameManager.playAsWhiteStatic)
+        {
+            GameManager.whiteKingMoved = true;
+        }
+        if (GameManager.chessBoard[7, 3] != 'K' && !GameManager.playAsWhiteStatic)
+        {
+            GameManager.whiteKingMoved = true;
+        }
+        if (GameManager.chessBoard[0, 4] != 'k' && GameManager.playAsWhiteStatic)
+        {
+            GameManager.blackKingMoved = true;
+        }
+        if (GameManager.chessBoard[0, 3] != 'k' && !GameManager.playAsWhiteStatic)
+        {
+            GameManager.blackKingMoved = true;
+        }
+
+        if (GameManager.chessBoard[7, 0] != 'R')
+        {
+            GameManager.whiteLeftRookMoved = true;
+        }
+        if (GameManager.chessBoard[7, 7] != 'R')
+        {
+            GameManager.whiteRightRookMoved = true;
+        }
+        if (GameManager.chessBoard[0, 0] != 'r')
+        {
+            GameManager.blackLeftRookMoved = true;
+        }
+        if (GameManager.chessBoard[0, 7] != 'r')
+        {
+            GameManager.blackRightRookMoved = true;
+        }
+
+
         if (!(pc.isWhite && (GameManager.move % 2 == 0 == GameManager.playAsWhiteStatic))) return;
         foreach (GameObject place in GameManager.positionList)
         {
@@ -95,23 +131,6 @@ public class PieceMovement : MonoBehaviour
         if (GameManager.positionList.Any())
         {
             GameManager.isMoving = true;
-        }
-
-        if (GameManager.chessBoard[7, 0] != 'R')
-        {
-            GameManager.whiteLeftRookMoved = true;
-        }
-        if (GameManager.chessBoard[7, 7] != 'R')
-        {
-            GameManager.whiteRightRookMoved = true;
-        }
-        if (GameManager.chessBoard[0, 0] != 'r')
-        {
-            GameManager.blackLeftRookMoved = true;
-        }
-        if (GameManager.chessBoard[0, 7] != 'r')
-        {
-            GameManager.blackRightRookMoved = true;
         }
     }
 
