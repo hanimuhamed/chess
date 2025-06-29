@@ -1,11 +1,13 @@
 using UnityEngine;
 using static UnityEngine.Rendering.DebugUI.Table;
 
-public class PlaceButton : MonoBehaviour {
+public class PlaceButton : MonoBehaviour
+{
     int x, y;
     public GameObject queen;
     public GameObject rook;
-    private void Start() {
+    private void Start()
+    {
         y = (int)transform.position.y;
         x = (int)transform.position.x;
     }
@@ -57,38 +59,46 @@ public class PlaceButton : MonoBehaviour {
             GameManager.pieceList[7 - y, x] = piece;
         }        // Handle castling - only if it's actually a castling move
         bool isWhiteCastling = GameManager.chessBoard[7 - y, x] == 'K' && Mathf.Abs(x - GameManager.prevX) == 2;
-        bool isBlackCastling = GameManager.chessBoard[7 - y, x] == 'k' && Mathf.Abs(x - GameManager.prevX) == 2;        if (isWhiteCastling || isBlackCastling)
+        bool isBlackCastling = GameManager.chessBoard[7 - y, x] == 'k' && Mathf.Abs(x - GameManager.prevX) == 2; if (isWhiteCastling || isBlackCastling)
         {
             int row = isWhiteCastling ? 7 : 0;
             int yPos = isWhiteCastling ? 0 : 7;
             char rookChar = isWhiteCastling ? 'R' : 'r';
-            
+
             // Find the rook's original position
             bool isKingsideCastling = x - GameManager.prevX == 2;
             int rookOriginalCol = -1;
-            
-            if (isKingsideCastling) {
+
+            if (isKingsideCastling)
+            {
                 // Search for rook to the right of the king's original position
-                for (int col = GameManager.prevX + 1; col < 8; col++) {
-                    if (GameManager.chessBoard[row, col] == rookChar && GameManager.pieceList[row, col] != null) {
+                for (int col = GameManager.prevX + 1; col < 8; col++)
+                {
+                    if (GameManager.chessBoard[row, col] == rookChar && GameManager.pieceList[row, col] != null)
+                    {
                         rookOriginalCol = col;
                         break;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 // Search for rook to the left of the king's original position
-                for (int col = GameManager.prevX - 1; col >= 0; col--) {
-                    if (GameManager.chessBoard[row, col] == rookChar && GameManager.pieceList[row, col] != null) {
+                for (int col = GameManager.prevX - 1; col >= 0; col--)
+                {
+                    if (GameManager.chessBoard[row, col] == rookChar && GameManager.pieceList[row, col] != null)
+                    {
                         rookOriginalCol = col;
                         break;
                     }
                 }
             }
 
-            if (rookOriginalCol != -1) {
+            if (rookOriginalCol != -1)
+            {
                 // Place rook next to where the king landed
                 int rookNewCol = isKingsideCastling ? x - 1 : x + 1;
-                
+
                 // Update board state
                 GameManager.chessBoard[row, rookNewCol] = rookChar;
                 GameManager.chessBoard[row, rookOriginalCol] = ' ';
@@ -119,4 +129,5 @@ public class PlaceButton : MonoBehaviour {
         GameManager.move++;
         //Debug.Log("Move: " + GameManager.move);
     }
+    
 }

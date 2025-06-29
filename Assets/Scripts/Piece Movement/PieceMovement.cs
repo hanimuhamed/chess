@@ -43,14 +43,14 @@ public class PieceMovement : MonoBehaviour
         GameManager gameManager = FindObjectOfType<GameManager>();
         if (gameManager == null)
         {
-            Debug.LogError("Could not find GameManager instance!");
+            //Debug.LogError("Could not find GameManager instance!");
             return false;
         }        // Check if this move would put or leave our king in check
         return !GameManager.IsInCheck(pc.isWhite, tempBoard);
     }
     private void OnMouseDown()
     {
-        Debug.Log("clicked");
+        //Debug.Log("clicked");
 
         if (GameManager.chessBoard[7, 4] != 'K' && GameManager.playAsWhiteStatic)
         {

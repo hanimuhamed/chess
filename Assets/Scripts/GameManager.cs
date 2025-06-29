@@ -109,7 +109,7 @@ public class GameManager : MonoBehaviour
         { 'R', 'N', 'B', ' ', ' ', 'R', ' ', 'K'},
     };
     public static char[,] chessBoard = {
-        { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
+        { 'r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'},
 
         { 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
 
@@ -123,7 +123,7 @@ public class GameManager : MonoBehaviour
 
         { 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
 
-        { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}
+        { 'R', 'N', 'B', 'K', 'Q', 'B', 'N', 'R'}
 
     };
     // Store the initial board state for opening detection
@@ -301,7 +301,7 @@ public class GameManager : MonoBehaviour
                 if (IsInCheck(true, chessBoard))
                 {
                     gameOver = true;
-                    winnerMessage = "Checkmate!\nBlack wins!";
+                    winnerMessage = playAsWhite? "Checkmate!\nBlack wins!" : "Checkmate!\nWhite wins!";
                 }
                 else
                 {
@@ -370,14 +370,14 @@ public class GameManager : MonoBehaviour
             IsKingCaptured(); // Check for game over
             isBotThinking = false;
             float timeSpent = Time.realtimeSinceStartup - startTime;
-            Debug.Log($"Bot played book move in {timeSpent:F3} seconds");
+            //Debug.Log($"Bot played book move in {timeSpent:F3} seconds");
             yield break;
         }
         var allMoves = new List<(int fromRow, int fromCol, int toRow, int toCol)>();
         var boards = new List<char[,]>();        // Debug current position if in check
         if (IsInCheck(false, boardCopy))
         {
-            Debug.Log("Black king is in check, searching for moves to escape check");
+            //Debug.Log("Black king is in check, searching for moves to escape check");
         }
 
         
@@ -402,7 +402,7 @@ public class GameManager : MonoBehaviour
                             // Debug when we find a legal move that escapes check
                             if (IsInCheck(false, boardCopy))
                             {
-                                Debug.Log($"Found legal move to escape check: {boardCopy[move.fromRow, move.fromCol]} from {GetSquareNotation(move.fromRow, move.fromCol)} to {GetSquareNotation(move.toRow, move.toCol)}");
+                                //Debug.Log($"Found legal move to escape check: {boardCopy[move.fromRow, move.fromCol]} from {GetSquareNotation(move.fromRow, move.fromCol)} to {GetSquareNotation(move.toRow, move.toCol)}");
                             }
                             allMoves.Add(move);
                             boards.Add(tempBoard);
@@ -413,14 +413,14 @@ public class GameManager : MonoBehaviour
         }
 
         // Debug the number of legal moves found
-        Debug.Log($"Found {allMoves.Count} legal moves for black");
+        //Debug.Log($"Found {allMoves.Count} legal moves for black");
 
         if (allMoves.Count > 0)
         {
-            Debug.Log("Legal moves found are:");
+            //Debug.Log("Legal moves found are:");
             foreach (var move in allMoves)
             {
-                Debug.Log($"{boardCopy[move.fromRow, move.fromCol]} from {GetSquareNotation(move.fromRow, move.fromCol)} to {GetSquareNotation(move.toRow, move.toCol)}");
+                //Debug.Log($"{boardCopy[move.fromRow, move.fromCol]} from {GetSquareNotation(move.fromRow, move.fromCol)} to {GetSquareNotation(move.toRow, move.toCol)}");
             }
         }
 
@@ -431,7 +431,7 @@ public class GameManager : MonoBehaviour
             if (IsInCheck(false, boardCopy))
             {
                 gameOver = true;
-                winnerMessage = "Checkmate!\nWhite wins!";
+                winnerMessage = playAsWhite? "Checkmate!\nWhite wins!" : "Checkmate!\nBlack wins!";
                 isBotThinking = false;
                 yield break;
             }
@@ -450,7 +450,7 @@ public class GameManager : MonoBehaviour
         (int fromRow, int fromCol, int toRow, int toCol) bestMove = (-1, -1, -1, -1);        // If there's only one legal move, just make it
         if (totalMoves == 1)
         {
-            Debug.Log("Only one legal move available - playing it immediately");
+            //Debug.Log("Only one legal move available - playing it immediately");
             bestMove = allMoves[0];
         }
         else
@@ -505,7 +505,7 @@ public class GameManager : MonoBehaviour
             // If we haven't found a good move but have legal moves, just pick the first one
             if (bestMove.fromRow == -1 && allMoves.Count > 0)
             {
-                Debug.Log("Falling back to first legal move due to evaluation issues");
+                //Debug.Log("Falling back to first legal move due to evaluation issues");
                 bestMove = allMoves[0];
             }
         // Make the best move on the actual board
@@ -522,11 +522,11 @@ public class GameManager : MonoBehaviour
             IsKingCaptured(); // Check for game over
 
             float timeSpent = Time.realtimeSinceStartup - startTime;
-            Debug.Log($"Bot calculated move in {timeSpent:F3} seconds (evaluated {totalMoves} positions at depth {minimaxDepth})");
+            //Debug.Log($"Bot calculated move in {timeSpent:F3} seconds (evaluated {totalMoves} positions at depth {minimaxDepth})");
         }
         else
         {
-            Debug.Log("Bot couldn't find a valid move!");
+            //Debug.Log("Bot couldn't find a valid move!");
         }
 
         isBotThinking = false;
@@ -1496,7 +1496,7 @@ public class GameManager : MonoBehaviour
                     break;
                 }
             }
-            Debug.Log($"Bot chose opening move: {chosenMove}");
+            //Debug.Log($"Bot chose opening move: {chosenMove}");
             var from = ParseSquareNotation(chosenMove.Substring(0, 2));
             var to = ParseSquareNotation(chosenMove.Substring(2, 2));
             return (from.row, from.col, to.row, to.col);
@@ -1541,19 +1541,19 @@ public class GameManager : MonoBehaviour
             if (openingBook.ContainsKey(whiteMove))
             {
                 string response = openingBook[whiteMove];
-                Debug.Log($"Found book response: {response}");
+                //Debug.Log($"Found book response: {response}");
                 var from = ParseSquareNotation(response.Substring(0, 2));
                 var to = ParseSquareNotation(response.Substring(2, 2));
                 return (from.row, from.col, to.row, to.col);
             }
             else
             {
-                Debug.Log("Move not found in opening book");
+                //Debug.Log("Move not found in opening book");
             }
         }
         else
         {
-            Debug.Log("Could not determine white's move");
+            //Debug.Log("Could not determine white's move");
         }
 
         return null;
@@ -1660,7 +1660,7 @@ public class GameManager : MonoBehaviour
         RemoveAllPieces();
         InitPieces();
 
-        Debug.Log("Game restarted");
+        //Debug.Log("Game restarted");
     }
 
     public void MakeGameMove(int fromRow, int fromCol, int toRow, int toCol)
@@ -1673,7 +1673,7 @@ public class GameManager : MonoBehaviour
             enPassantCol = toCol;
             enPassantRow = toRow + (char.IsUpper(piece) ? 1 : -1);
             enPassantPossible = true;
-            Debug.Log($"En passant possible at col {enPassantCol}, row {enPassantRow}");
+            //Debug.Log($"En passant possible at col {enPassantCol}, row {enPassantRow}");
         }
         else
         {
@@ -1813,7 +1813,7 @@ public class GameManager : MonoBehaviour
 
         // Visual update
         Refresh();
-        Debug.Log("Move undone");
+        //.Log("Move undone");
 
         // When undoing to before a checkmate/stalemate
         if (gameOver)
