@@ -66,6 +66,16 @@ public class GameManager : MonoBehaviour
     public static int move = 0;
 
     public TextMeshProUGUI message;
+    
+    // Timer-related variables
+    public TextMeshPro whiteTime;
+    public TextMeshPro blackTime;
+    public int gameTime = 10; // Initial time in minutes
+    private float whiteTimeRemaining;
+    private float blackTimeRemaining;
+    private bool isTimerRunning = false;
+    private Coroutine whiteTimerCoroutine;
+    private Coroutine blackTimerCoroutine;
 
     public GameObject darkSquare;
 
@@ -109,7 +119,7 @@ public class GameManager : MonoBehaviour
         { 'R', 'N', 'B', ' ', ' ', 'R', ' ', 'K'},
     };
     public static char[,] chessBoard = {
-        { 'r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'},
+        { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
 
         { 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
 
@@ -123,7 +133,7 @@ public class GameManager : MonoBehaviour
 
         { 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
 
-        { 'R', 'N', 'B', 'K', 'Q', 'B', 'N', 'R'}
+        { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}
 
     };
     // Store the initial board state for opening detection
@@ -208,7 +218,7 @@ public class GameManager : MonoBehaviour
         placeButton = placeButtonSprite;
         currentButton = currentButtonSprite;
         trail = trailSprite;
-        Application.targetFrameRate = 12;
+        Application.targetFrameRate = 50;
     }
     void Start()
     {
@@ -218,12 +228,14 @@ public class GameManager : MonoBehaviour
         playAsWhiteStatic = playAsWhite;
         StaticCaptureColor = captureColor;
         StaticPlaceColor = placeColor;
-        System.Array.Copy(playAsWhite? initialBoardWhite : initialBoardBlack, chessBoard, initialBoardWhite.Length);
+        System.Array.Copy(playAsWhite ? initialBoardWhite : initialBoardBlack, chessBoard, initialBoardWhite.Length);
         sr = tile.GetComponent<SpriteRenderer>();
         InitializePlaceButtonPool();
         CreateBoard();
         InitPieces();
         InitializePlaceButtonPool();
+
+        Restart();
     }
     private bool isBotThinking = false;
      private bool waitingForNextFrame = false;
@@ -1379,7 +1391,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public static bool IsKingCaptured()
+    public bool IsKingCaptured()
     {
         bool whiteKingExists = false;
         bool blackKingExists = false;
@@ -1396,12 +1408,14 @@ public class GameManager : MonoBehaviour
         {
             gameOver = true;
             winnerMessage = "Checkmate! Black wins!";
+            isTimerRunning = false;  // Add this line
             return true;
         }
         if (!blackKingExists)
         {
             gameOver = true;
             winnerMessage = "Checkmate! White wins!";
+            isTimerRunning = false;  // Add this line
             return true;
         }
         return false;
@@ -1624,6 +1638,7 @@ public class GameManager : MonoBehaviour
         StopAllCoroutines();
 
         // Reset game state
+        moveHistory.Clear();
         move = 0;
         gameOver = false;
         winnerMessage = "";
@@ -1631,6 +1646,14 @@ public class GameManager : MonoBehaviour
         isMoving = false;
         isBotThinking = false;
         waitingForNextFrame = false;
+
+        // Initialize timers
+        whiteTimeRemaining = gameTime * 60f;
+        blackTimeRemaining = gameTime * 60f;
+        UpdateTimerDisplay();
+        StopTimers();
+        isTimerRunning = true;
+        StartPlayerTimer();
 
         darkSquare.SetActive(false);
 
@@ -1673,7 +1696,7 @@ public class GameManager : MonoBehaviour
             enPassantCol = toCol;
             enPassantRow = toRow + (char.IsUpper(piece) ? 1 : -1);
             enPassantPossible = true;
-            //Debug.Log($"En passant possible at col {enPassantCol}, row {enPassantRow}");
+            Debug.Log($"En passant possible at col {enPassantCol}, row {enPassantRow}");
         }
         else
         {
@@ -1686,6 +1709,13 @@ public class GameManager : MonoBehaviour
         // Make the actual move
         MakeMove(fromRow, fromCol, toRow, toCol, chessBoard);
         move++; // Increment move counter
+        
+        // Switch active timer
+        if (!gameOver)
+        {
+            StartPlayerTimer();
+        }
+        
         Refresh(); // Update the visual board
     }
 
@@ -1820,6 +1850,108 @@ public class GameManager : MonoBehaviour
         {
             gameOver = false;
             winnerMessage = "";
+        }
+    }
+
+    private void UpdateTimerDisplay()
+    {
+        if (whiteTime != null)
+        {
+            int whiteMinutes = Mathf.FloorToInt(whiteTimeRemaining / 60f);
+            int whiteSeconds = Mathf.FloorToInt(whiteTimeRemaining % 60f);
+            int whiteCentiseconds = Mathf.FloorToInt((whiteTimeRemaining * 100f) % 100f);
+            whiteTime.text = string.Format("{0:00}:{1:00}.{2:00}", whiteMinutes, whiteSeconds, whiteCentiseconds);
+            if (whiteMinutes <= 0 && whiteSeconds <= 9)
+            {
+                whiteTime.color = new Color(1f, 0.5f, 0.5f, 0.5f);
+            }
+            else
+            {
+                whiteTime.color = new Color(1f, 1f, 1f, 0.5f);
+            }
+        }
+
+        if (blackTime != null)
+        {
+            int blackMinutes = Mathf.FloorToInt(blackTimeRemaining / 60f);
+            int blackSeconds = Mathf.FloorToInt(blackTimeRemaining % 60f);
+            int blackCentiseconds = Mathf.FloorToInt((blackTimeRemaining * 100f) % 100f);
+            blackTime.text = string.Format("{0:00}:{1:00}.{2:00}", blackMinutes, blackSeconds, blackCentiseconds);
+            if (blackMinutes <= 0 && blackSeconds <= 9)
+            {
+                blackTime.color = new Color(1f, 0.5f, 0.5f, 0.5f);
+            }
+            else
+            {
+                blackTime.color = new Color(1f, 1f, 1f, 0.5f);
+            }
+        }
+    }
+
+    private void StartPlayerTimer()
+    {
+        if (!isTimerRunning) return;
+
+        StopTimers();
+        if ((move % 2 == 0 && playAsWhite) || (move % 2 == 1 && !playAsWhite))
+        {
+            whiteTimerCoroutine = StartCoroutine(RunTimer(true));
+        }
+        else
+        {
+            blackTimerCoroutine = StartCoroutine(RunTimer(false));
+        }
+    }
+
+    private void StopTimers()
+    {
+        if (whiteTimerCoroutine != null)
+            StopCoroutine(whiteTimerCoroutine);
+        if (blackTimerCoroutine != null)
+            StopCoroutine(blackTimerCoroutine);
+    }
+
+    private IEnumerator RunTimer(bool isWhite)
+    {
+        Debug.Log($"Starting timer for {(isWhite ? "White" : "Black")}");
+        float lastUpdateTime = Time.time;
+        
+        while (isTimerRunning && !gameOver)  // Add gameOver check here
+        {
+            float currentTime = Time.time;
+            float deltaTime = currentTime - lastUpdateTime;
+            lastUpdateTime = currentTime;
+            
+            if (move == 0) yield return null; // Don't run timer on first move
+            else if (!isBotThinking)
+            {
+                whiteTimeRemaining -= deltaTime;
+                if (whiteTimeRemaining <= 0)
+                {
+                    whiteTimeRemaining = 0;
+                    gameOver = true;
+                    winnerMessage = "Black wins on time!";
+                    message.text = winnerMessage;
+                    isTimerRunning = false;
+                    StopTimers();  // Add this line to stop all timers
+                }
+            }
+            else
+            {
+                blackTimeRemaining -= deltaTime;
+                if (blackTimeRemaining <= 0)
+                {
+                    blackTimeRemaining = 0;
+                    gameOver = true;
+                    winnerMessage = "White wins on time!";
+                    message.text = winnerMessage;
+                    isTimerRunning = false;
+                    StopTimers();  // Add this line to stop all timers
+                }
+            }
+            
+            UpdateTimerDisplay();
+            yield return null;
         }
     }
 }
