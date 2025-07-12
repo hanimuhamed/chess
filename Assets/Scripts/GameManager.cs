@@ -1930,7 +1930,7 @@ public class GameManager : MonoBehaviour
                 {
                     whiteTimeRemaining = 0;
                     gameOver = true;
-                    winnerMessage = "Black wins on time!";
+                    winnerMessage = playAsWhite? "Black wins on time!" : "White wins on time!";
                     message.text = winnerMessage;
                     isTimerRunning = false;
                     StopTimers();  // Add this line to stop all timers
@@ -1942,8 +1942,8 @@ public class GameManager : MonoBehaviour
                 if (blackTimeRemaining <= 0)
                 {
                     blackTimeRemaining = 0;
-                    gameOver = true;
-                    winnerMessage = "White wins on time!";
+                    gameOver = true;                   
+                    winnerMessage = playAsWhite? "White wins on time!" : "Black wins on time!";
                     message.text = winnerMessage;
                     isTimerRunning = false;
                     StopTimers();  // Add this line to stop all timers
