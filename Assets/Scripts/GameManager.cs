@@ -230,6 +230,8 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
+        playAsWhite = MenuManager.playAsWhite;
+        gameTime = MenuManager.gameTime;
         message.text = winnerMessage;
         darkSquare.SetActive(false);
         elseSquare.SetActive(false);
