@@ -9,6 +9,7 @@ using UnityEngine.VFX;
 using static UnityEngine.Rendering.DebugUI.Table;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -543,7 +544,7 @@ public class GameManager : MonoBehaviour
         if (bestMove.fromRow != -1)
         {
             bool isCapture = chessBoard[bestMove.toRow, bestMove.toCol] != ' ';
-        
+
             // Check for en passant capture
             bool isEnPassantCapture = false;
             char piece = chessBoard[bestMove.fromRow, bestMove.fromCol];
@@ -1767,13 +1768,13 @@ public class GameManager : MonoBehaviour
         // Make the actual move
         MakeMove(fromRow, fromCol, toRow, toCol, chessBoard);
         move++; // Increment move counter
-        
+
         // Switch active timer
         if (!gameOver)
         {
             StartPlayerTimer();
         }
-        
+
         Refresh(); // Update the visual board
     }
 
@@ -2012,7 +2013,7 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
     }
-    
+
     private void ManageCheckIndicator()
     {
         // Check current state
@@ -2055,5 +2056,10 @@ public class GameManager : MonoBehaviour
             lastWhiteInCheck = whiteInCheck;
             lastBlackInCheck = blackInCheck;
         }
+    }
+
+    public void GoToMainMenu()
+    {
+        SceneManager.LoadScene("Menu");
     }
 }
