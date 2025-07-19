@@ -5,9 +5,11 @@ public class RestartButton : MonoBehaviour
 {
     public GameManager gameManager;
     public TextMeshPro label;
+    public AudioClip notify;
     void OnMouseDown()
     {
         //gameManager.playAsWhite = !gameManager.playAsWhite; // Toggle play as white
+        AudioSource.PlayClipAtPoint(notify, Vector3.zero);
         gameManager.Restart();
     }
 

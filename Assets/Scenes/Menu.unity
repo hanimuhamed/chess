@@ -2302,6 +2302,7 @@ MonoBehaviour:
   tile: {fileID: 6328629052922963009, guid: 6c9d4b4234627e6418dcad800e7a96e2, type: 3}
   lightCol: {r: 0.29559743, g: 0.29559743, b: 0.29559743, a: 1}
   darkCol: {r: 0.16981131, g: 0.16981131, b: 0.16981131, a: 1}
+  notify: {fileID: 8300000, guid: c8ff8599a94ba96489adad63fb5b43a0, type: 3}
 --- !u!4 &1295850074
 Transform:
   m_ObjectHideFlags: 0

@@ -5,9 +5,11 @@ public class UndoButton : MonoBehaviour
 {
     public GameManager gameManager;
     public TextMeshPro label;
+    public AudioClip notify;
     void OnMouseDown()
     {
         if (GameManager.gameOver) return;
+        AudioSource.PlayClipAtPoint(notify, Vector3.zero);
         gameManager.Undo();
     }
 

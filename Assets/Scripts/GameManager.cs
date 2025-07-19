@@ -2060,6 +2060,7 @@ public class GameManager : MonoBehaviour
 
     public void GoToMainMenu()
     {
+        AudioSource.PlayClipAtPoint(notifySound, Vector3.zero);
         SceneManager.LoadScene("Menu");
     }
 }

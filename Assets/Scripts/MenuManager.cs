@@ -9,6 +9,7 @@ public class MenuManager : MonoBehaviour
     public GameObject tile;
     public Color lightCol;
     public Color darkCol;
+    public AudioClip notify;
 
     void Start()
     {
@@ -23,41 +24,48 @@ public class MenuManager : MonoBehaviour
         // Logic to open the menu
         Debug.Log("Menu opened");
         menuPanel.SetActive(true);
+        playSound();
     }
     public void CloseMenu()
     {
         // Logic to close the menu
         Debug.Log("Menu closed");
         menuPanel.SetActive(false);
+        playSound();
     }
     public void Quit()
     {
         // Logic to quit the game
         Debug.Log("Game quit");
+        playSound();
         Application.Quit();
     }
     public void SetPlayAsWhite(bool isItWhite)
     {
         playAsWhite = isItWhite;
         Debug.Log("Play as White: " + playAsWhite);
+        playSound();
     }
     public void SetPlayAsRandom()
     {
         playAsWhite = Random.value > 0.5f; // Randomly set to true or false
         Debug.Log("Play as Random: " + playAsWhite);
+        playSound();
     }
     public void SetGameTime(int time)
     {
         gameTime = time;
         Debug.Log("Game time set to: " + gameTime + " minutes");
+        playSound();
     }
 
     public void Play()
     {
         CloseMenu();
+        playSound();
         SceneManager.LoadScene("Game"); // Load the game scene
     }
-    
+
     void CreateBoard()
     {
         if (tile == null) return;
@@ -76,6 +84,13 @@ public class MenuManager : MonoBehaviour
                 //newButton.GetComponent<SpriteButton>().col = col;
 
             }
+        }
+    }
+    private void playSound()
+    {
+        if (notify != null)
+        {
+            AudioSource.PlayClipAtPoint(notify, Vector3.zero);
         }
     }
 }

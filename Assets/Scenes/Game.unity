@@ -1279,6 +1279,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 429774583}
   label: {fileID: 554553381}
+  notify: {fileID: 8300000, guid: c8ff8599a94ba96489adad63fb5b43a0, type: 3}
 --- !u!61 &1002327233
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1432,6 +1433,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 429774583}
   label: {fileID: 2094340865}
+  notify: {fileID: 8300000, guid: c8ff8599a94ba96489adad63fb5b43a0, type: 3}
 --- !u!61 &1202447129
 BoxCollider2D:
   m_ObjectHideFlags: 0
