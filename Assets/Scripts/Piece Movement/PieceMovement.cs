@@ -22,6 +22,7 @@ public class PieceMovement : MonoBehaviour
     }
 
     public Piece piece;
+    private float scale = 0.11111f;
 
     private void Start()
     {
@@ -92,6 +93,7 @@ public class PieceMovement : MonoBehaviour
         {
             Destroy(place);
         }
+
         GameManager.positionList.Clear();
         y = (int)transform.position.y;
         x = (int)transform.position.x;
@@ -121,10 +123,12 @@ public class PieceMovement : MonoBehaviour
                         if (GameManager.chessBoard[7 - (int)pos.y, (int)pos.x] != ' ' || isEnPassant)
                         {
                             placeButton.GetComponentInChildren<SpriteRenderer>().color = GameManager.StaticCaptureColor;
+                            placeButton.GetComponent<PlaceButton>().isCapture = true;
                         }
                         else
                         {
                             placeButton.GetComponentInChildren<SpriteRenderer>().color = GameManager.StaticPlaceColor;
+                            placeButton.GetComponent<PlaceButton>().isCapture = false;
                         }
                         GameManager.positionList.Add(Instantiate(placeButton, pos, Quaternion.identity));
                     }
@@ -471,7 +475,6 @@ public class PieceMovement : MonoBehaviour
         return GameManager.IsInCheck(isWhiteKing, tempBoard);
     }
 
-    private float scale = 0.11111f;
     private void OnMouseEnter()
     {
         if (!pc.isWhite) return;

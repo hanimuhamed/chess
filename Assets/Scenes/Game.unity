@@ -256,8 +256,8 @@ MonoBehaviour:
   darkCol: {r: 0.61006284, g: 0.4366979, b: 0.3587476, a: 1}
   lightPiece: {r: 1, g: 1, b: 1, a: 1}
   darkPiece: {r: 0.2830189, g: 0.2830189, b: 0.2830189, a: 1}
-  placeColor: {r: 0.7173435, g: 0.99371064, b: 0.5156045, a: 0.4117647}
-  captureColor: {r: 1, g: 0.19182372, b: 0.19182372, a: 0.7372549}
+  placeColor: {r: 0.45393398, g: 0.8301887, b: 0.17491381, a: 0.29411766}
+  captureColor: {r: 1, g: 0.19182372, b: 0.19182372, a: 0.54901963}
   tile: {fileID: 1490944447178033348, guid: 73a96ca7b136b0d438890a011d7c4bcb, type: 3}
   button: {fileID: 1881894697815821622, guid: 2477f07653e5cde40b6049614080acf8, type: 3}
   message: {fileID: 1493696721}
@@ -275,6 +275,10 @@ MonoBehaviour:
   currentButtonSprite: {fileID: 1881894697815821622, guid: 256910e6171c6ee4d81b8798a6152189, type: 3}
   trailSprite: {fileID: 1881894697815821622, guid: 54db6e069dee37d4da428444dfca4f9f, type: 3}
   elseSquare: {fileID: 2063746939}
+  checkSquare: {fileID: 1881894697815821622, guid: 42d0ae123e6cd1b46a52c0242a7f30d9, type: 3}
+  placeSound: {fileID: 8300000, guid: cba2e2d8167ff4243a090f5ba7fc1620, type: 3}
+  captureSound: {fileID: 8300000, guid: 4ef3406d67dcab045a4700641abf8b49, type: 3}
+  notifySound: {fileID: 8300000, guid: c8ff8599a94ba96489adad63fb5b43a0, type: 3}
 --- !u!1 &434359006
 GameObject:
   m_ObjectHideFlags: 0

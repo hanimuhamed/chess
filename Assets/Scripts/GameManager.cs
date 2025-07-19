@@ -66,7 +66,7 @@ public class GameManager : MonoBehaviour
     public static int move = 0;
 
     public TextMeshProUGUI message;
-    
+
     // Timer-related variables
     public TextMeshPro whiteTime;
     public TextMeshPro blackTime;
@@ -100,7 +100,7 @@ public class GameManager : MonoBehaviour
 
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
     };
-    
+
     private char[,] enPassantBoard = {
         { ' ', 'r', 'b', ' ', 'k', 'b', ' ', 'r'},
 
@@ -188,7 +188,7 @@ public class GameManager : MonoBehaviour
     public GameObject currentButtonSprite;
     public GameObject trailSprite;
 
-    
+
     public static List<GameObject> trailList = new List<GameObject>();
     public static List<GameObject> positionList = new List<GameObject>();
 
@@ -212,9 +212,17 @@ public class GameManager : MonoBehaviour
 
     public static bool gameOver = false;
     private static string winnerMessage = "";
+    public GameObject checkSquare;
+    private GameObject currentCheckSquare;
+    private bool lastWhiteInCheck = false;
+    private bool lastBlackInCheck = false;
+
+    public AudioClip placeSound;
+    public AudioClip captureSound;
+    public AudioClip notifySound;
 
     private void Awake()
-    { 
+    {
         placeButton = placeButtonSprite;
         currentButton = currentButtonSprite;
         trail = trailSprite;
@@ -238,7 +246,7 @@ public class GameManager : MonoBehaviour
         Restart();
     }
     private bool isBotThinking = false;
-     private bool waitingForNextFrame = false;
+    private bool waitingForNextFrame = false;
     private void Update()
     {
         if (gameOver)
@@ -313,7 +321,7 @@ public class GameManager : MonoBehaviour
                 if (IsInCheck(true, chessBoard))
                 {
                     gameOver = true;
-                    winnerMessage = playAsWhite? "Checkmate!\nBlack wins!" : "Checkmate!\nWhite wins!";
+                    winnerMessage = playAsWhite ? "Checkmate!\nBlack wins!" : "Checkmate!\nWhite wins!";
                 }
                 else
                 {
@@ -327,6 +335,8 @@ public class GameManager : MonoBehaviour
         {
             waitingForNextFrame = false;
         }
+
+        ManageCheckIndicator();
     }
 
     private Coroutine botMoveCoroutine;
@@ -356,7 +366,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForEndOfFrame();
 
         // Clear existing trails
-        
+
         float startTime = Time.realtimeSinceStartup;
 
         // Create a copy of the current board for evaluation
@@ -369,13 +379,13 @@ public class GameManager : MonoBehaviour
         {
             // Add delay before making the book move
             yield return new WaitForSeconds(0.1f);
-            
+
             ClearMoveTrails();
             var fromTrail = Instantiate(trail, new Vector3(bookMove.Value.fromCol, 7 - bookMove.Value.fromRow, 0), Quaternion.identity);
             var toTrail = Instantiate(trail, new Vector3(bookMove.Value.toCol, 7 - bookMove.Value.toRow, 0), Quaternion.identity);
             trailList.Add(fromTrail);
             trailList.Add(toTrail);
-
+            AudioSource.PlayClipAtPoint(placeSound, Camera.main.transform.position);
             MakeMove(bookMove.Value.fromRow, bookMove.Value.fromCol, bookMove.Value.toRow, bookMove.Value.toCol, chessBoard);
             move++; // Increment move counter
             Refresh(); // Update the visual board
@@ -392,7 +402,7 @@ public class GameManager : MonoBehaviour
             //Debug.Log("Black king is in check, searching for moves to escape check");
         }
 
-        
+
 
         // Collect all possible moves first
         for (int row = 0; row < 8; row++)
@@ -443,7 +453,7 @@ public class GameManager : MonoBehaviour
             if (IsInCheck(false, boardCopy))
             {
                 gameOver = true;
-                winnerMessage = playAsWhite? "Checkmate!\nWhite wins!" : "Checkmate!\nBlack wins!";
+                winnerMessage = playAsWhite ? "Checkmate!\nWhite wins!" : "Checkmate!\nBlack wins!";
                 isBotThinking = false;
                 yield break;
             }
@@ -468,67 +478,101 @@ public class GameManager : MonoBehaviour
         else
         {
             // Move calculation to background task
-               int totalPieces = 0;
-                for (int row = 0; row < 8; row++)
+            int totalPieces = 0;
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
                 {
-                    for (int col = 0; col < 8; col++)
+                    if (chessBoard[row, col] != ' ' &&
+                        chessBoard[row, col] != 'K' &&
+                        char.IsUpper(chessBoard[row, col]))
                     {
-                        if (chessBoard[row, col] != ' ' && 
-                            chessBoard[row, col] != 'K' && 
-                            char.IsUpper(chessBoard[row, col]))
-                        {
-                            totalPieces++;
-                        }
+                        totalPieces++;
                     }
                 }
-                var calculationTask = Task.Run(() => {
-                    var localBestScore = int.MaxValue;
-                    var localBestMove = (-1, -1, -1, -1);
+            }
+            var calculationTask = Task.Run(() =>
+            {
+                var localBestScore = int.MaxValue;
+                var localBestMove = (-1, -1, -1, -1);
 
-                    // Process all moves in parallel
-                    Parallel.For(0, totalMoves, i => {
-                        try {
-                            int score = Minimax(boards[i], minimaxDepth, int.MinValue, int.MaxValue, true, totalPieces);
-                            lock(this) {
-                                if (score < localBestScore) {
-                                    localBestScore = score;
-                                    localBestMove = allMoves[i];
-                                }
+                // Process all moves in parallel
+                Parallel.For(0, totalMoves, i =>
+                {
+                    try
+                    {
+                        int score = Minimax(boards[i], minimaxDepth, int.MinValue, int.MaxValue, true, totalPieces);
+                        lock (this)
+                        {
+                            if (score < localBestScore)
+                            {
+                                localBestScore = score;
+                                localBestMove = allMoves[i];
                             }
                         }
-                        catch {
-                            // Skip failed evaluations
-                        }
-                    });
-                    
-                    return (localBestScore, localBestMove);
+                    }
+                    catch
+                    {
+                        // Skip failed evaluations
+                    }
                 });
 
-                // Wait for calculation while keeping UI responsive
-                while (!calculationTask.IsCompleted) {
-                    yield return null;
-                }
+                return (localBestScore, localBestMove);
+            });
 
-                var result = calculationTask.Result;
-                bestScore = result.localBestScore;
-                bestMove = result.localBestMove;
-            }
-
-            // If we haven't found a good move but have legal moves, just pick the first one
-            if (bestMove.fromRow == -1 && allMoves.Count > 0)
+            // Wait for calculation while keeping UI responsive
+            while (!calculationTask.IsCompleted)
             {
-                //Debug.Log("Falling back to first legal move due to evaluation issues");
-                bestMove = allMoves[0];
+                yield return null;
             }
+
+            var result = calculationTask.Result;
+            bestScore = result.localBestScore;
+            bestMove = result.localBestMove;
+        }
+
+        // If we haven't found a good move but have legal moves, just pick the first one
+        if (bestMove.fromRow == -1 && allMoves.Count > 0)
+        {
+            //Debug.Log("Falling back to first legal move due to evaluation issues");
+            bestMove = allMoves[0];
+        }
         // Make the best move on the actual board
         if (bestMove.fromRow != -1)
         {
-            
+            bool isCapture = chessBoard[bestMove.toRow, bestMove.toCol] != ' ';
+        
+            // Check for en passant capture
+            bool isEnPassantCapture = false;
+            char piece = chessBoard[bestMove.fromRow, bestMove.fromCol];
+            if (char.ToLower(piece) == 'p' && bestMove.fromCol != bestMove.toCol && chessBoard[bestMove.toRow, bestMove.toCol] == ' ')
+            {
+                if (enPassantPossible && bestMove.toCol == enPassantCol && bestMove.toRow == enPassantRow)
+                {
+                    isEnPassantCapture = true;
+                    isCapture = true; // En passant is also a capture
+                }
+            }
+
             ClearMoveTrails();
             var fromTrail = Instantiate(trail, new Vector3(bestMove.fromCol, 7 - bestMove.fromRow, 0), Quaternion.identity);
             var toTrail = Instantiate(trail, new Vector3(bestMove.toCol, 7 - bestMove.toRow, 0), Quaternion.identity);
             trailList.Add(fromTrail);
             trailList.Add(toTrail);
+
+
+            if (isCapture)
+            {
+                // You'll need to add these public AudioClip variables to your GameManager class
+                if (captureSound != null)
+                    AudioSource.PlayClipAtPoint(captureSound, Camera.main.transform.position);
+            }
+            else
+            {
+                if (placeSound != null)
+                    AudioSource.PlayClipAtPoint(placeSound, Camera.main.transform.position);
+            }
+
             MakeGameMove(bestMove.fromRow, bestMove.fromCol, bestMove.toRow, bestMove.toCol);
 
             IsKingCaptured(); // Check for game over
@@ -543,7 +587,7 @@ public class GameManager : MonoBehaviour
 
         isBotThinking = false;
     }
-    public int Minimax(char[,] board, int depth, int alpha, int beta, bool isMaximizing,  int totalPieces)
+    public int Minimax(char[,] board, int depth, int alpha, int beta, bool isMaximizing, int totalPieces)
     {
         // Base cases
         if (depth == 0)
@@ -561,7 +605,7 @@ public class GameManager : MonoBehaviour
             {
                 for (int col = 0; col < 8; col++)
                 {
-                    if ((isMaximizing && char.IsUpper(board[row, col])) || 
+                    if ((isMaximizing && char.IsUpper(board[row, col])) ||
                         (!isMaximizing && char.IsLower(board[row, col])))
                     {
                         var moves = GetLegalMoves(row, col, board);
@@ -771,7 +815,7 @@ public class GameManager : MonoBehaviour
         int whiteKingCol = -1, blackKingCol = -1;
         int whiteKingRow = -1, blackKingRow = -1;
 
-// Find kings' positions
+        // Find kings' positions
         int enemyKingRow = -1, enemyKingCol = -1;
         bool isMajorPieceEndgame = false;
         int majorPieceCount = 0;
@@ -892,7 +936,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        
+
 
         // Check if we're in a major piece endgame
         isMajorPieceEndgame = majorPieceCount > 0 && pieceCount <= 8;
@@ -909,7 +953,7 @@ public class GameManager : MonoBehaviour
             {
                 score -= 20;
             }
-            
+
             bool hasBlackMoves = HasAnyLegalMoves(board, false);
             bool isBlackInCheck = IsInCheck(false, board);
 
@@ -1065,12 +1109,12 @@ public class GameManager : MonoBehaviour
         }
         if (char.IsLower(ch))
         {
-            piece.GetComponent<SpriteRenderer>().color = playAsWhite? darkPiece : lightPiece;
+            piece.GetComponent<SpriteRenderer>().color = playAsWhite ? darkPiece : lightPiece;
             piece.GetComponent<PieceColor>().isWhite = false;
         }
         else if (char.IsUpper(ch))
         {
-            piece.GetComponent<SpriteRenderer>().color = playAsWhite? lightPiece : darkPiece;
+            piece.GetComponent<SpriteRenderer>().color = playAsWhite ? lightPiece : darkPiece;
             piece.GetComponent<PieceColor>().isWhite = true;
         }
         return piece;
@@ -1104,7 +1148,8 @@ public class GameManager : MonoBehaviour
         bool isBlack = char.IsLower(piece);
 
         switch (char.ToLower(piece))
-        {            case 'p':
+        {
+            case 'p':
                 // Pawn moves
                 int direction = isBlack ? 1 : -1;  // Black pawns move down, white moves up
                 int startRow = isBlack ? 1 : 6;
@@ -1141,7 +1186,7 @@ public class GameManager : MonoBehaviour
                             }
                         }
                         // En passant
-                        else if (enPassantPossible && 
+                        else if (enPassantPossible &&
                                 row == (isBlack ? 4 : 3) && // Correct rank for en passant
                                 col + colOffset == enPassantCol && // Adjacent to pawn that moved
                                 row + direction == enPassantRow) // Capture square matches
@@ -1204,7 +1249,8 @@ public class GameManager : MonoBehaviour
 
                 // Only check castling if this is a king in its starting position
                 if (updateCastling)
-                {                    if (isBlack && !blackKingMoved && row == 0 && col == 4)
+                {
+                    if (isBlack && !blackKingMoved && row == 0 && col == 4)
                     {
                         // Kingside castling
                         if (!blackRightRookMoved &&
@@ -1350,7 +1396,8 @@ public class GameManager : MonoBehaviour
         {
             board[toRow, toCol] = 'Q';
         }
-    }    public static void MakeMove(int fromRow, int fromCol, int toRow, int toCol, char[,] board)
+    }
+    public static void MakeMove(int fromRow, int fromCol, int toRow, int toCol, char[,] board)
     {
         char piece = board[fromRow, fromCol];
 
@@ -1478,7 +1525,7 @@ public class GameManager : MonoBehaviour
         {"h2h4", "d7d5"},     // Against Grob (claim center)
         {"b2b4", "d7d5"},     // Against Polish (claim center)
         {"d2d3", "d7d5"}      // Against Colle-style setup (claim center)
-    };    private (int fromRow, int fromCol, int toRow, int toCol)? GetBookMove(char[,] board)
+    }; private (int fromRow, int fromCol, int toRow, int toCol)? GetBookMove(char[,] board)
     {        // If we're white (not playAsWhite) and it's move 0, make a random first move
         if (!playAsWhite && move == 0)
         {            // When playing as black, the board is flipped, so we need to use flipped coordinates
@@ -1531,9 +1578,9 @@ public class GameManager : MonoBehaviour
             for (int c = 0; c < 8 && !moveFound; c++)
             {
                 // Found where a piece moved from - empty in current board but had piece in initial board
-                if (board[r, c] == ' ' && (playAsWhite? initialBoardWhite[r, c] : initialBoardBlack[r, c]) != ' ' && char.IsUpper(playAsWhite? initialBoardWhite[r, c] : initialBoardBlack[r, c]))
+                if (board[r, c] == ' ' && (playAsWhite ? initialBoardWhite[r, c] : initialBoardBlack[r, c]) != ' ' && char.IsUpper(playAsWhite ? initialBoardWhite[r, c] : initialBoardBlack[r, c]))
                 {
-                    char movedPiece = playAsWhite? initialBoardWhite[r, c] : initialBoardBlack[r, c];
+                    char movedPiece = playAsWhite ? initialBoardWhite[r, c] : initialBoardBlack[r, c];
 
                     // Look for where it went in the current board
                     for (int r2 = 0; r2 < 8 && !moveFound; r2++)
@@ -1624,8 +1671,8 @@ public class GameManager : MonoBehaviour
         }
 
         return false;
-    }    
-    
+    }
+
     public void Restart()
     {
         // Reset en passant state
@@ -1634,7 +1681,7 @@ public class GameManager : MonoBehaviour
         enPassantRow = -1;
         // Stop all running coroutines
         moveHistory.Clear();
-        
+
         StopAllCoroutines();
 
         // Reset game state
@@ -1671,13 +1718,22 @@ public class GameManager : MonoBehaviour
             if (trail != null)
                 Destroy(trail);
         }
+
+        if (currentCheckSquare != null)
+        {
+            Destroy(currentCheckSquare);
+            currentCheckSquare = null;
+        }
+        lastWhiteInCheck = false;
+        lastBlackInCheck = false;
+
         trailList.Clear();
         ClearActivePlaceButtons();
 
         // Reset board to initial position
         chessBoard = new char[8, 8];
         playAsWhiteStatic = playAsWhite;
-        System.Array.Copy(playAsWhite? initialBoardWhite : initialBoardBlack, chessBoard, initialBoardWhite.Length);
+        System.Array.Copy(playAsWhite ? initialBoardWhite : initialBoardBlack, chessBoard, initialBoardWhite.Length);
 
         // Recreate pieces
         RemoveAllPieces();
@@ -1738,14 +1794,14 @@ public class GameManager : MonoBehaviour
             // Simulate king on this square
             tempBoard[row, c + direction] = board[row, col];
             tempBoard[row, col] = ' ';
-            
+
             // If any square is under attack, castling is illegal
             if (IsInCheck(isBlack, tempBoard))
             {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -1770,7 +1826,7 @@ public class GameManager : MonoBehaviour
             boardState = new char[8, 8];
             piecesState = new GameObject[8, 8];
             System.Array.Copy(board, boardState, board.Length);
-            
+
             // Deep copy of piece references
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j < 8; j++)
@@ -1915,13 +1971,13 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"Starting timer for {(isWhite ? "White" : "Black")}");
         float lastUpdateTime = Time.time;
-        
+
         while (isTimerRunning && !gameOver)  // Add gameOver check here
         {
             float currentTime = Time.time;
             float deltaTime = currentTime - lastUpdateTime;
             lastUpdateTime = currentTime;
-            
+
             if (move == 0) yield return null; // Don't run timer on first move
             else if (!isBotThinking)
             {
@@ -1930,7 +1986,7 @@ public class GameManager : MonoBehaviour
                 {
                     whiteTimeRemaining = 0;
                     gameOver = true;
-                    winnerMessage = playAsWhite? "Black wins on time!" : "White wins on time!";
+                    winnerMessage = playAsWhite ? "Black wins on time!" : "White wins on time!";
                     message.text = winnerMessage;
                     isTimerRunning = false;
                     StopTimers();  // Add this line to stop all timers
@@ -1942,16 +1998,60 @@ public class GameManager : MonoBehaviour
                 if (blackTimeRemaining <= 0)
                 {
                     blackTimeRemaining = 0;
-                    gameOver = true;                   
-                    winnerMessage = playAsWhite? "White wins on time!" : "Black wins on time!";
+                    gameOver = true;
+                    winnerMessage = playAsWhite ? "White wins on time!" : "Black wins on time!";
                     message.text = winnerMessage;
                     isTimerRunning = false;
                     StopTimers();  // Add this line to stop all timers
                 }
             }
-            
+
             UpdateTimerDisplay();
             yield return null;
+        }
+    }
+    
+    private void ManageCheckIndicator()
+    {
+        // Check current state
+        bool whiteInCheck = IsInCheck(true, chessBoard);
+        bool blackInCheck = IsInCheck(false, chessBoard);
+
+        // Only update if the check state has changed
+        if (whiteInCheck != lastWhiteInCheck || blackInCheck != lastBlackInCheck)
+        {
+            // Destroy existing check square if it exists
+            if (currentCheckSquare != null)
+            {
+                Destroy(currentCheckSquare);
+                currentCheckSquare = null;
+            }
+
+            // Create new check square if needed
+            if (whiteInCheck || blackInCheck)
+            {
+                // Find the king that's in check
+                for (int row = 0; row < 8; row++)
+                {
+                    for (int col = 0; col < 8; col++)
+                    {
+                        char piece = chessBoard[row, col];
+                        if ((whiteInCheck && piece == 'K') || (blackInCheck && piece == 'k'))
+                        {
+                            // Instantiate check square at the king's position
+                            Vector3 position = new Vector3(col, 7 - row, -0.5f);
+                            currentCheckSquare = Instantiate(checkSquare, position, Quaternion.identity);
+                            AudioSource.PlayClipAtPoint(notifySound, position);
+                            break;
+                        }
+                    }
+                    if (currentCheckSquare != null) break;
+                }
+            }
+
+            // Update the cached state
+            lastWhiteInCheck = whiteInCheck;
+            lastBlackInCheck = blackInCheck;
         }
     }
 }

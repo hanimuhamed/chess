@@ -6,10 +6,18 @@ public class PlaceButton : MonoBehaviour
     int x, y;
     public GameObject queen;
     public GameObject rook;
+    private SpriteRenderer sr;
+    public bool isCapture;
+    public float tint = 0.25f;
+    //private AudioSource audioSource;
+    public AudioClip placeSound;
+    public AudioClip captureSound;
     private void Start()
     {
         y = (int)transform.position.y;
         x = (int)transform.position.x;
+        sr = transform.GetChild(0).GetComponent<SpriteRenderer>();
+        //audioSource = GetComponent<AudioSource>();
     }
     private void OnMouseDown()
     {
@@ -128,6 +136,23 @@ public class PlaceButton : MonoBehaviour
 
         GameManager.move++;
         //Debug.Log("Move: " + GameManager.move);
+        if (isCapture)
+        {
+            AudioSource.PlayClipAtPoint(captureSound, Camera.main.transform.position);
+        }
+        else
+        {
+            AudioSource.PlayClipAtPoint(placeSound, Camera.main.transform.position);
+        }
     }
-    
+
+    private void OnMouseEnter()
+    {
+        sr.color += new Color(0f, 0f, 0f, tint);
+    }
+
+    private void OnMouseExit()
+    {
+        sr.color -= new Color(0f, 0f, 0f, tint);
+    }
 }
