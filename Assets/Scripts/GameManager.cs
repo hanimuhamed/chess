@@ -25,26 +25,26 @@ public class GameManager : MonoBehaviour
         trailList.Clear();
     }
 
-    // En passant tracking
-    public static int enPassantCol = -1;  // Column of pawn that just moved two squares
-    public static int enPassantRow = -1;  // Row where capturing pawn should move to
+    // en passant tracking
+    public static int enPassantCol = -1;  // column of pawn that just moved two squares
+    public static int enPassantRow = -1;  // row where capturing pawn should move to
     public static bool enPassantPossible = false;
 
-    // Piece values for evaluation
+    // piece values for evaluation
     private static readonly Dictionary<char, int> pieceCosts = new Dictionary<char, int>
     {
-        {'p', -1},   // Black pawn
-        {'n', -3},   // Black knight
-        {'b', -3},   // Black bishop
-        {'r', -5},   // Black rook
-        {'q', -9},   // Black queen
-        {'k', -10000}, // Black king (practically infinite)
-        {'P', 1},    // White pawn
-        {'N', 3},    // White knight
-        {'B', 3},    // White bishop
-        {'R', 5},    // White rook
-        {'Q', 9},    // White queen
-        {'K', 10000}  // White king (practically infinite)
+        {'p', -1},
+        {'n', -3},
+        {'b', -3},
+        {'r', -5},
+        {'q', -9},
+        {'k', -10000},
+        {'P', 1},
+        {'N', 3},
+        {'B', 3},
+        {'R', 5},
+        {'Q', 9},
+        {'K', 10000}
     };
 
     public bool playAsWhite = true;
@@ -67,11 +67,9 @@ public class GameManager : MonoBehaviour
     public static int move = 0;
 
     public TextMeshProUGUI message;
-
-    // Timer-related variables
     public TextMeshPro whiteTime;
     public TextMeshPro blackTime;
-    public int gameTime = 10; // Initial time in minutes
+    public int gameTime = 10;
     private float whiteTimeRemaining;
     private float blackTimeRemaining;
     private bool isTimerRunning = false;
@@ -137,7 +135,6 @@ public class GameManager : MonoBehaviour
         { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}
 
     };
-    // Store the initial board state for opening detection
     private static readonly char[,] initialBoardWhite = {
         { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
 
@@ -207,9 +204,8 @@ public class GameManager : MonoBehaviour
     public static bool whiteRightRookMoved = false;
     public static bool blackRightRookMoved = false;
 
-    // Add pool for place buttons
     private Queue<GameObject> placeButtonPool = new Queue<GameObject>();
-    private const int INITIAL_POOL_SIZE = 32;  // Maximum possible moves for any piece
+    private const int INITIAL_POOL_SIZE = 32;
 
     public static bool gameOver = false;
     private static string winnerMessage = "";
@@ -254,7 +250,6 @@ public class GameManager : MonoBehaviour
     {
         if (gameOver)
         {
-            // When game is over, deactivate the selection square and return
             message.text = winnerMessage;
             darkSquare.SetActive(true);
             if (elseSquare.activeSelf)
@@ -277,37 +272,31 @@ public class GameManager : MonoBehaviour
             elseSquare.SetActive(false);
         }
 
-        // Bot's turn (black pieces)
-        if ((move % 2 == 1 == playAsWhite) && !isBotThinking)
+        if ((move % 2 == 1 == playAsWhite) && !isBotThinking) // bot's turn
         {
             Refresh();
             if (!waitingForNextFrame)
             {
-                // First frame after player's move, let UI updates complete
                 waitingForNextFrame = true;
                 StartCoroutine(WaitForUIUpdate());
                 return;
             }
         }
-        else if ((move % 2 == 0 == playAsWhite) && !isBotThinking && !isMoving) // Player's turn (white pieces)
+        else if ((move % 2 == 0 == playAsWhite) && !isBotThinking && !isMoving) // player's turn
         {
-            // Check if player has any legal moves
             bool hasLegalMoves = false;
             for (int row = 0; row < 8 && !hasLegalMoves; row++)
             {
                 for (int col = 0; col < 8; col++)
                 {
-                    if (char.IsUpper(chessBoard[row, col])) // White piece
+                    if (char.IsUpper(chessBoard[row, col]))
                     {
                         var moves = GetLegalMoves(row, col, chessBoard);
                         foreach (var move in moves)
                         {
-                            // Create a temporary board and make the move
                             char[,] tempBoard = new char[8, 8];
                             System.Array.Copy(chessBoard, tempBoard, chessBoard.Length);
                             MakeMove(move.fromRow, move.fromCol, move.toRow, move.toCol, tempBoard);
-
-                            // Check if the move is legal (doesn't leave king in check)
                             if (!IsInCheck(true, tempBoard))
                             {
                                 hasLegalMoves = true;
@@ -346,11 +335,9 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator WaitForUIUpdate()
     {
-        // Wait for two frames to ensure all UI elements are updated
         yield return null;
         yield return null;
 
-        // Force layout rebuild
         var canvas = FindObjectOfType<Canvas>();
         if (canvas != null)
         {
@@ -365,22 +352,16 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator MakeBotMoveCoroutine()
     {
-        // Wait for end of frame to ensure all previous updates are complete
         yield return new WaitForEndOfFrame();
-
-        // Clear existing trails
 
         float startTime = Time.realtimeSinceStartup;
 
-        // Create a copy of the current board for evaluation
         char[,] boardCopy = new char[8, 8];
         System.Array.Copy(chessBoard, boardCopy, chessBoard.Length);
 
-        // Check for book moves first
         var bookMove = GetBookMove(boardCopy);
         if (bookMove.HasValue)
         {
-            // Add delay before making the book move
             yield return new WaitForSeconds(0.1f);
 
             ClearMoveTrails();
@@ -390,24 +371,21 @@ public class GameManager : MonoBehaviour
             trailList.Add(toTrail);
             AudioSource.PlayClipAtPoint(placeSound, Camera.main.transform.position);
             MakeMove(bookMove.Value.fromRow, bookMove.Value.fromCol, bookMove.Value.toRow, bookMove.Value.toCol, chessBoard);
-            move++; // Increment move counter
-            Refresh(); // Update the visual board
-            IsKingCaptured(); // Check for game over
+            move++;
+            Refresh();
+            IsKingCaptured();
             isBotThinking = false;
             float timeSpent = Time.realtimeSinceStartup - startTime;
             //Debug.Log($"Bot played book move in {timeSpent:F3} seconds");
             yield break;
         }
         var allMoves = new List<(int fromRow, int fromCol, int toRow, int toCol)>();
-        var boards = new List<char[,]>();        // Debug current position if in check
+        var boards = new List<char[,]>();
         if (IsInCheck(false, boardCopy))
         {
             //Debug.Log("Black king is in check, searching for moves to escape check");
         }
 
-
-
-        // Collect all possible moves first
         for (int row = 0; row < 8; row++)
         {
             for (int col = 0; col < 8; col++)
@@ -417,14 +395,12 @@ public class GameManager : MonoBehaviour
                     var moves = GetLegalMoves(row, col, boardCopy);
                     foreach (var move in moves)
                     {
-                        // Create a temporary board and make the move
                         char[,] tempBoard = new char[8, 8];
                         System.Array.Copy(boardCopy, tempBoard, boardCopy.Length);
-                        MakeMove(move.fromRow, move.fromCol, move.toRow, move.toCol, tempBoard);                        // Only add moves that don't leave the king in check
+                        MakeMove(move.fromRow, move.fromCol, move.toRow, move.toCol, tempBoard);                     
                         bool isLegalMove = !IsInCheck(false, tempBoard);
                         if (isLegalMove)
                         {
-                            // Debug when we find a legal move that escapes check
                             if (IsInCheck(false, boardCopy))
                             {
                                 //Debug.Log($"Found legal move to escape check: {boardCopy[move.fromRow, move.fromCol]} from {GetSquareNotation(move.fromRow, move.fromCol)} to {GetSquareNotation(move.toRow, move.toCol)}");
@@ -436,23 +412,15 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-
-        // Debug the number of legal moves found
-        //Debug.Log($"Found {allMoves.Count} legal moves for black");
-
         if (allMoves.Count > 0)
         {
             //Debug.Log("Legal moves found are:");
             foreach (var move in allMoves)
             {
-                //Debug.Log($"{boardCopy[move.fromRow, move.fromCol]} from {GetSquareNotation(move.fromRow, move.fromCol)} to {GetSquareNotation(move.toRow, move.toCol)}");
             }
         }
-
-        // If no legal moves are available, it's checkmate
         if (allMoves.Count == 0)
         {
-            // Only declare checkmate if the king is in check
             if (IsInCheck(false, boardCopy))
             {
                 gameOver = true;
@@ -462,7 +430,7 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                // Stalemate
+                // stalemate
                 gameOver = true;
                 winnerMessage = "Stalemate!\nGame is a draw.";
                 isBotThinking = false;
@@ -472,7 +440,7 @@ public class GameManager : MonoBehaviour
 
         int totalMoves = allMoves.Count;
         int bestScore = int.MaxValue;
-        (int fromRow, int fromCol, int toRow, int toCol) bestMove = (-1, -1, -1, -1);        // If there's only one legal move, just make it
+        (int fromRow, int fromCol, int toRow, int toCol) bestMove = (-1, -1, -1, -1);
         if (totalMoves == 1)
         {
             //Debug.Log("Only one legal move available - playing it immediately");
@@ -480,7 +448,6 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // Move calculation to background task
             int totalPieces = 0;
             for (int row = 0; row < 8; row++)
             {
@@ -499,7 +466,6 @@ public class GameManager : MonoBehaviour
                 var localBestScore = int.MaxValue;
                 var localBestMove = (-1, -1, -1, -1);
 
-                // Process all moves in parallel
                 Parallel.For(0, totalMoves, i =>
                 {
                     try
@@ -516,14 +482,13 @@ public class GameManager : MonoBehaviour
                     }
                     catch
                     {
-                        // Skip failed evaluations
+                        // skip failed evaluations
                     }
                 });
 
                 return (localBestScore, localBestMove);
             });
 
-            // Wait for calculation while keeping UI responsive
             while (!calculationTask.IsCompleted)
             {
                 yield return null;
@@ -534,18 +499,15 @@ public class GameManager : MonoBehaviour
             bestMove = result.localBestMove;
         }
 
-        // If we haven't found a good move but have legal moves, just pick the first one
         if (bestMove.fromRow == -1 && allMoves.Count > 0)
         {
             //Debug.Log("Falling back to first legal move due to evaluation issues");
             bestMove = allMoves[0];
         }
-        // Make the best move on the actual board
         if (bestMove.fromRow != -1)
         {
             bool isCapture = chessBoard[bestMove.toRow, bestMove.toCol] != ' ';
 
-            // Check for en passant capture
             bool isEnPassantCapture = false;
             char piece = chessBoard[bestMove.fromRow, bestMove.fromCol];
             if (char.ToLower(piece) == 'p' && bestMove.fromCol != bestMove.toCol && chessBoard[bestMove.toRow, bestMove.toCol] == ' ')
@@ -566,7 +528,6 @@ public class GameManager : MonoBehaviour
 
             if (isCapture)
             {
-                // You'll need to add these public AudioClip variables to your GameManager class
                 if (captureSound != null)
                     AudioSource.PlayClipAtPoint(captureSound, Camera.main.transform.position);
             }
@@ -578,7 +539,7 @@ public class GameManager : MonoBehaviour
 
             MakeGameMove(bestMove.fromRow, bestMove.fromCol, bestMove.toRow, bestMove.toCol);
 
-            IsKingCaptured(); // Check for game over
+            IsKingCaptured();
 
             float timeSpent = Time.realtimeSinceStartup - startTime;
             //Debug.Log($"Bot calculated move in {timeSpent:F3} seconds (evaluated {totalMoves} positions at depth {minimaxDepth})");
@@ -592,7 +553,6 @@ public class GameManager : MonoBehaviour
     }
     public int Minimax(char[,] board, int depth, int alpha, int beta, bool isMaximizing, int totalPieces)
     {
-        // Base cases
         if (depth == 0)
         {
             return EvaluatePosition(board);
@@ -603,7 +563,6 @@ public class GameManager : MonoBehaviour
             bool hasLegalMoves = false;
             bool isInCheckNow = IsInCheck(isMaximizing, board);
 
-            // Quick check for any legal moves
             for (int row = 0; row < 8 && !hasLegalMoves; row++)
             {
                 for (int col = 0; col < 8; col++)
@@ -632,18 +591,16 @@ public class GameManager : MonoBehaviour
             {
                 if (isInCheckNow)
                 {
-                    // Checkmate: return a score that prefers faster mates
                     return isMaximizing ? (-100000 + depth) : (100000 - depth);
                 }
                 else
                 {
-                    // Stalemate: heavily penalize
+                    // stalemate
                     return 0;
                 }
             }
         }
 
-        // Check for king capture (immediate win/loss)
         bool whiteKingExists = false;
         bool blackKingExists = false;
         for (int i = 0; i < 8; i++)
@@ -656,10 +613,9 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Use large but safe values for mate
         const int MATE_SCORE = 100000;
-        if (!whiteKingExists) return -MATE_SCORE + depth; // Black wins (practically infinite score)
-        if (!blackKingExists) return MATE_SCORE - depth;  // White wins (practically infinite score)
+        if (!whiteKingExists) return -MATE_SCORE + depth; // black wins
+        if (!blackKingExists) return MATE_SCORE - depth;  // white wins
 
         if (isMaximizing)
         {
@@ -669,7 +625,7 @@ public class GameManager : MonoBehaviour
                 for (int col = 0; col < 8; col++)
                 {
                     if (char.IsUpper(board[row, col]))
-                    { // White piece
+                    { // white
                         var moves = GetLegalMoves(row, col, board);
                         foreach (var move in moves)
                         {
@@ -684,7 +640,7 @@ public class GameManager : MonoBehaviour
 
                             if (beta <= alpha)
                             {
-                                return maxScore; // Beta cut-off
+                                return maxScore; // beta cut-off
                             }
                         }
                     }
@@ -700,7 +656,7 @@ public class GameManager : MonoBehaviour
                 for (int col = 0; col < 8; col++)
                 {
                     if (char.IsLower(board[row, col]))
-                    { // Black piece
+                    { // black
                         var moves = GetLegalMoves(row, col, board);
                         foreach (var move in moves)
                         {
@@ -714,7 +670,7 @@ public class GameManager : MonoBehaviour
 
                             if (beta <= alpha)
                             {
-                                return minScore; // Alpha cut-off
+                                return minScore; // alpha cut-off
                             }
                         }
                     }
@@ -722,7 +678,7 @@ public class GameManager : MonoBehaviour
             }
             return minScore;
         }
-    }    // Position tables to encourage better piece placement
+    } 
     private static readonly int[,] pawnPositionBonus = {
         { 0,  0,  0,  0,  0,  0,  0,  0},
         {50, 50, 50, 50, 50, 50, 50, 50},
@@ -791,7 +747,6 @@ public class GameManager : MonoBehaviour
 
     private int GetPositionBonus(char piece, int row, int col)
     {
-        // Flip coordinates for black pieces to use the same tables
         int evalRow = char.IsUpper(piece) ? row : (7 - row);
         int evalCol = col;
 
@@ -810,20 +765,20 @@ public class GameManager : MonoBehaviour
     {
         int score = 0;
 
-        // Arrays to track pawn columns for both colors
+        // pawn columns for both colors
         int[] whitePawnColumns = new int[8];
         int[] blackPawnColumns = new int[8];
 
-        // Track king positions
+        // king positions
         int whiteKingCol = -1, blackKingCol = -1;
         int whiteKingRow = -1, blackKingRow = -1;
 
-        // Find kings' positions
+        // kings positions
         int enemyKingRow = -1, enemyKingCol = -1;
         bool isMajorPieceEndgame = false;
         int majorPieceCount = 0;
         int pieceCount = 0;
-        // Count material and positional scores
+        // count material and positional scores
         for (int col = 0; col < 8; col++)
         {
             for (int row = 0; row < 8; row++)
@@ -831,10 +786,8 @@ public class GameManager : MonoBehaviour
                 if (board[row, col] != ' ')
                 {
                     char piece = board[row, col];
-                    // Material score
                     score += pieceCosts[piece];
 
-                    // Track pawn columns
                     if (piece == 'P')
                     {
                         whitePawnColumns[col]++;
@@ -844,7 +797,6 @@ public class GameManager : MonoBehaviour
                         blackPawnColumns[col]++;
                     }
 
-                    // Track king positions
                     if (piece == 'K')
                     {
                         whiteKingRow = row;
@@ -856,7 +808,6 @@ public class GameManager : MonoBehaviour
                         blackKingCol = col;
                     }
 
-                    // Positional score (scaled down to not overwhelm material value)
                     int posBonus = GetPositionBonus(board[row, col], row, col);
                     score += char.IsUpper(board[row, col]) ? posBonus / 20 : -posBonus / 20;
 
@@ -872,7 +823,6 @@ public class GameManager : MonoBehaviour
                                 enemyKingCol = col;
                             }
                         }
-                        // Count major pieces (queen and rook)
                         if (piece == 'Q' || piece == 'R')
                         {
                             majorPieceCount++;
@@ -892,7 +842,6 @@ public class GameManager : MonoBehaviour
             if (blackPawnColumns[col] > 1)
                 score += blackPawnColumns[col] - 1;
 
-            // Penalize isolated pawns
             bool isIsolated = true;
             if (col > 0 && col < 7)
             {
@@ -912,13 +861,11 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        // Evaluate king safety
+        // king safety
         if (whiteKingCol != -1)
         {
-            // Penalize exposed king
-            if (whiteKingRow < 6) // King has moved away from back rank
+            if (whiteKingRow < 6)
                 score -= 2;
-            // Bonus for pawn shield
             for (int col = Math.Max(0, whiteKingCol - 1); col <= Math.Min(7, whiteKingCol + 1); col++)
             {
                 if (whitePawnColumns[col] > 0)
@@ -928,10 +875,8 @@ public class GameManager : MonoBehaviour
 
         if (blackKingCol != -1)
         {
-            // Penalize exposed king
-            if (blackKingRow > 1) // King has moved away from back rank
+            if (blackKingRow > 1)
                 score += 2;
-            // Bonus for pawn shield
             for (int col = Math.Max(0, blackKingCol - 1); col <= Math.Min(7, blackKingCol + 1); col++)
             {
                 if (blackPawnColumns[col] > 0)
@@ -941,16 +886,15 @@ public class GameManager : MonoBehaviour
 
 
 
-        // Check if we're in a major piece endgame
+        // major piece endgame
         isMajorPieceEndgame = majorPieceCount > 0 && pieceCount <= 8;
 
         if (isMajorPieceEndgame && enemyKingRow != -1)
         {
-            // Distance from edge bonus (simpler calculation)
             score -= 5 * (Math.Min(enemyKingRow, 7 - enemyKingRow) +
                         Math.Min(enemyKingCol, 7 - enemyKingCol));
 
-            // Corner bonus
+            // corner bonus
             if ((enemyKingRow == 0 || enemyKingRow == 7) &&
                 (enemyKingCol == 0 || enemyKingCol == 7))
             {
@@ -964,12 +908,11 @@ public class GameManager : MonoBehaviour
             {
                 if (isBlackInCheck)
                 {
-                    // Checkmate is better than any other position
                     return int.MaxValue;
                 }
                 else
                 {
-                    // Heavily penalize stalemate
+                    // stalemate
                     return int.MinValue / 2;
                 }
             }
@@ -977,10 +920,6 @@ public class GameManager : MonoBehaviour
 
         return score;
     }
-
-
-
-    // Quick check if side has any legal moves
     private bool HasAnyLegalMoves(char[,] board, bool isWhite)
     {
         for (int row = 0; row < 8; row++)
@@ -1130,7 +1069,7 @@ public class GameManager : MonoBehaviour
             {
                 if (pieceList[i, j] != null)
                 {
-                    DestroyImmediate(pieceList[i, j]);  // Immediate destruction instead of delayed
+                    DestroyImmediate(pieceList[i, j]);
                     pieceList[i, j] = null;
                 }
             }
@@ -1153,15 +1092,13 @@ public class GameManager : MonoBehaviour
         switch (char.ToLower(piece))
         {
             case 'p':
-                // Pawn moves
-                int direction = isBlack ? 1 : -1;  // Black pawns move down, white moves up
+                // pawn moves
+                int direction = isBlack ? 1 : -1; 
                 int startRow = isBlack ? 1 : 6;
-                // Forward one square
                 if (IsInBoard(row + direction, col) && board[row + direction, col] == ' ')
                 {
-                    moves.Add((row, col, row + direction, col)); // Add single-step move
+                    moves.Add((row, col, row + direction, col));
 
-                    // Initial two-square move
                     if (row == startRow &&
                         IsInBoard(row + 2 * direction, col) &&
                         board[row + 2 * direction, col] == ' ')
@@ -1170,29 +1107,28 @@ public class GameManager : MonoBehaviour
                     }
                 }
 
-                // Regular captures and en passant
+                // captures
                 for (int colOffset = -1; colOffset <= 1; colOffset += 2)
                 {
                     if (IsInBoard(row + direction, col + colOffset))
                     {
-                        // Regular captures
                         char targetPiece = board[row + direction, col + colOffset];
                         if (targetPiece != ' ' && IsOpponentPiece(piece, targetPiece))
                         {
                             if (row + direction == 7 || row + direction == 0)
                             {
-                                moves.Add((row, col, row + direction, col + colOffset)); // Promotion capture
+                                moves.Add((row, col, row + direction, col + colOffset));
                             }
                             else
                             {
                                 moves.Add((row, col, row + direction, col + colOffset));
                             }
                         }
-                        // En passant
+                        // en passant
                         else if (enPassantPossible &&
-                                row == (isBlack ? 4 : 3) && // Correct rank for en passant
-                                col + colOffset == enPassantCol && // Adjacent to pawn that moved
-                                row + direction == enPassantRow) // Capture square matches
+                                row == (isBlack ? 4 : 3) &&
+                                col + colOffset == enPassantCol &&
+                                row + direction == enPassantRow)
                         {
                             moves.Add((row, col, row + direction, col + colOffset));
                         }
@@ -1201,12 +1137,12 @@ public class GameManager : MonoBehaviour
                 break;
 
             case 'r':
-                // Rook moves (horizontal and vertical)
+                // rook moves
                 AddSlidingMoves(row, col, new[] { (-1, 0), (1, 0), (0, -1), (0, 1) }, board, moves);
                 break;
 
             case 'n':
-                // Knight moves
+                // knight moves
                 int[,] knightOffsets = { { -2, -1 }, { -2, 1 }, { -1, -2 }, { -1, 2 }, { 1, -2 }, { 1, 2 }, { 2, -1 }, { 2, 1 } };
                 for (int i = 0; i < 8; i++)
                 {
@@ -1223,11 +1159,11 @@ public class GameManager : MonoBehaviour
                 break;
 
             case 'b':
-                // Bishop moves (diagonals)
+                // bishop moves
                 AddSlidingMoves(row, col, new[] { (-1, -1), (-1, 1), (1, -1), (1, 1) }, board, moves);
                 break;
             case 'q':
-                // Queen moves (combination of rook and bishop)
+                // queen moves
                 AddSlidingMoves(row, col, new[] {
                     (-1,-1), (-1,0), (-1,1),
                     (0,-1),          (0,1),
@@ -1235,7 +1171,7 @@ public class GameManager : MonoBehaviour
                 }, board, moves);
                 break;
             case 'k':
-                // Basic king moves
+                // king moves
                 int[,] kingOffsets = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 } };
                 for (int i = 0; i < 8; i++)
                 {
@@ -1250,22 +1186,22 @@ public class GameManager : MonoBehaviour
                     }
                 }
 
-                // Only check castling if this is a king in its starting position
+                // castling
                 if (updateCastling)
                 {
                     if (isBlack && !blackKingMoved && row == 0 && col == 4)
                     {
-                        // Kingside castling
+                        // kingside castling
                         if (!blackRightRookMoved &&
                             board[0, 5] == ' ' &&
                             board[0, 6] == ' ' &&
                             board[0, 7] == 'r' &&
                             CanCastle(0, 4, 6, board, true))
                         {
-                            moves.Add((0, 4, 0, 6)); // King's move in castling
+                            moves.Add((0, 4, 0, 6));
                         }
 
-                        // Queenside castling
+                        // queenside castling
                         if (!blackLeftRookMoved &&
                             board[0, 3] == ' ' &&
                             board[0, 2] == ' ' &&
@@ -1273,12 +1209,12 @@ public class GameManager : MonoBehaviour
                             board[0, 0] == 'r' &&
                             CanCastle(0, 4, 2, board, true))
                         {
-                            moves.Add((0, 4, 0, 2)); // King's move in castling
+                            moves.Add((0, 4, 0, 2));
                         }
                     }
                     else if (!isBlack && !whiteKingMoved && row == 7 && col == 4)
                     {
-                        // Kingside castling
+                        // kingside castling
                         if (!whiteRightRookMoved &&
                             board[7, 5] == ' ' &&
                             board[7, 6] == ' ' &&
@@ -1288,7 +1224,7 @@ public class GameManager : MonoBehaviour
                             moves.Add((7, 4, 7, 6));
                         }
 
-                        // Queenside castling
+                        // queenside castling
                         if (!whiteLeftRookMoved &&
                             board[7, 3] == ' ' &&
                             board[7, 2] == ' ' &&
@@ -1328,7 +1264,7 @@ public class GameManager : MonoBehaviour
                     {
                         moves.Add((row, col, newRow, newCol));
                     }
-                    break; // Stop after capture or blocking piece
+                    break;
                 }
                 newRow += dRow;
                 newCol += dCol;
@@ -1367,17 +1303,17 @@ public class GameManager : MonoBehaviour
 
     private static void HandleCastling(int fromRow, int fromCol, int toRow, int toCol, char[,] board)
     {
-        // If it's a king moving two squares, it's castling
         if (char.ToLower(board[fromRow, fromCol]) == 'k' && Mathf.Abs(toCol - fromCol) == 2)
         {
-            // Kingside castling
+            // kingside castling
             if (toCol > fromCol)
             {
                 // Move the rook
                 board[toRow, 5] = board[toRow, 7];
                 board[toRow, 7] = ' ';
             }
-            // Queenside castling
+            // queenside
+            //  castling
             else
             {
                 // Move the rook
@@ -1389,12 +1325,10 @@ public class GameManager : MonoBehaviour
 
     private static void HandlePawnPromotion(int toRow, int toCol, char[,] board)
     {
-        // If a black pawn reaches the bottom rank, promote to queen
         if (toRow == 7 && board[toRow, toCol] == 'p')
         {
             board[toRow, toCol] = 'q';
         }
-        // If a white pawn reaches the top rank, promote to queen
         else if (toRow == 0 && board[toRow, toCol] == 'P')
         {
             board[toRow, toCol] = 'Q';
@@ -1404,21 +1338,16 @@ public class GameManager : MonoBehaviour
     {
         char piece = board[fromRow, fromCol];
 
-        // Handle en passant capture
         if (char.ToLower(piece) == 'p' && fromCol != toCol && board[toRow, toCol] == ' ')
         {
-            // This is an en passant capture, remove the captured pawn
             board[fromRow, toCol] = ' ';
         }
 
-        // Update castling rights
         UpdateCastlingRights(fromRow, fromCol, piece);
 
-        // Make the move
         board[toRow, toCol] = board[fromRow, fromCol];
         board[fromRow, fromCol] = ' ';
 
-        // Handle special moves
         HandleCastling(fromRow, fromCol, toRow, toCol, board);
         HandlePawnPromotion(toRow, toCol, board);
     }
@@ -1430,7 +1359,6 @@ public class GameManager : MonoBehaviour
             DestroyImmediate(pieceList[row, col]);
         }
         pieceList[row, col] = newPiece;
-        // Force immediate UI refresh
         if (UnityEngine.UI.GraphicRegistry.instance != null)
         {
             var canvas = FindObjectOfType<Canvas>();
@@ -1458,14 +1386,14 @@ public class GameManager : MonoBehaviour
         {
             gameOver = true;
             winnerMessage = "Checkmate! Black wins!";
-            isTimerRunning = false;  // Add this line
+            isTimerRunning = false;
             return true;
         }
         if (!blackKingExists)
         {
             gameOver = true;
             winnerMessage = "Checkmate! White wins!";
-            isTimerRunning = false;  // Add this line
+            isTimerRunning = false;
             return true;
         }
         return false;
@@ -1540,16 +1468,13 @@ public class GameManager : MonoBehaviour
                 ("b8c6", 3)    // Knight Development (flipped) - Rare but interesting
             };
 
-            // Calculate total weight
             int totalWeight = 0;
             foreach (var move in weightedMoves)
                 totalWeight += move.weight;
 
-            // Get a random number within the total weight
             int randomNum = UnityEngine.Random.Range(0, totalWeight);
 
-            // Find the chosen move based on weights
-            string chosenMove = weightedMoves[0].move; // default to first move
+            string chosenMove = weightedMoves[0].move;
             int currentWeight = 0;
             foreach (var move in weightedMoves)
             {
@@ -1566,26 +1491,21 @@ public class GameManager : MonoBehaviour
             return (from.row, from.col, to.row, to.col);
         }
 
-        // Only use book responses when it's move 1
         if (move != 1)
         {
             return null;
         }
 
-        // Find white's first move
         string whiteMove = "";
-        // Compare current board with initial board to find the moved piece
         bool moveFound = false;
         for (int r = 0; r < 8 && !moveFound; r++)
         {
             for (int c = 0; c < 8 && !moveFound; c++)
             {
-                // Found where a piece moved from - empty in current board but had piece in initial board
                 if (board[r, c] == ' ' && (playAsWhite ? initialBoardWhite[r, c] : initialBoardBlack[r, c]) != ' ' && char.IsUpper(playAsWhite ? initialBoardWhite[r, c] : initialBoardBlack[r, c]))
                 {
                     char movedPiece = playAsWhite ? initialBoardWhite[r, c] : initialBoardBlack[r, c];
 
-                    // Look for where it went in the current board
                     for (int r2 = 0; r2 < 8 && !moveFound; r2++)
                     {
                         for (int c2 = 0; c2 < 8 && !moveFound; c2++)
@@ -1599,7 +1519,7 @@ public class GameManager : MonoBehaviour
                     }
                 }
             }
-        }        // If we found the move and have a book response
+        } 
         if (!string.IsNullOrEmpty(whiteMove))
         {
             if (openingBook.ContainsKey(whiteMove))
@@ -1625,10 +1545,8 @@ public class GameManager : MonoBehaviour
 
     public static bool IsInCheck(bool isWhiteKing, char[,] board)
     {
-        // Find king's position
         char kingChar = isWhiteKing ? 'K' : 'k';
         int kingRow = -1, kingCol = -1;
-        // Find the king
         for (int row = 0; row < 8; row++)
         {
             for (int col = 0; col < 8; col++)
@@ -1643,14 +1561,12 @@ public class GameManager : MonoBehaviour
             if (kingRow != -1) break;
         }
 
-        if (kingRow == -1) return false; // King not found (shouldn't happen in normal play)
+        if (kingRow == -1) return false;
 
-        // Check for attacks from each piece type
         char[] enemyPieces = isWhiteKing
-            ? new char[] { 'p', 'r', 'n', 'b', 'q', 'k' }  // Black pieces that could attack white king
-            : new char[] { 'P', 'R', 'N', 'B', 'Q', 'K' }; // White pieces that could attack black king
+            ? new char[] { 'p', 'r', 'n', 'b', 'q', 'k' } 
+            : new char[] { 'P', 'R', 'N', 'B', 'Q', 'K' }; 
 
-        // Check each square on the board
         for (int row = 0; row < 8; row++)
         {
             for (int col = 0; col < 8; col++)
@@ -1658,10 +1574,7 @@ public class GameManager : MonoBehaviour
                 char piece = board[row, col];
                 if (Array.IndexOf(enemyPieces, piece) != -1)
                 {
-                    // Get all possible moves for this enemy piece
-                    var moves = GetLegalMoves(row, col, board, false);  // false to prevent infinite recursion
-
-                    // Check if any move can capture the king
+                    var moves = GetLegalMoves(row, col, board, false);
                     foreach (var move in moves)
                     {
                         if (move.toRow == kingRow && move.toCol == kingCol)
@@ -1678,16 +1591,13 @@ public class GameManager : MonoBehaviour
 
     public void Restart()
     {
-        // Reset en passant state
         enPassantPossible = false;
         enPassantCol = -1;
         enPassantRow = -1;
-        // Stop all running coroutines
         moveHistory.Clear();
 
         StopAllCoroutines();
 
-        // Reset game state
         moveHistory.Clear();
         move = 0;
         gameOver = false;
@@ -1697,7 +1607,6 @@ public class GameManager : MonoBehaviour
         isBotThinking = false;
         waitingForNextFrame = false;
 
-        // Initialize timers
         whiteTimeRemaining = gameTime * 60f;
         blackTimeRemaining = gameTime * 60f;
         UpdateTimerDisplay();
@@ -1707,7 +1616,6 @@ public class GameManager : MonoBehaviour
 
         darkSquare.SetActive(false);
 
-        // Reset castling flags
         whiteKingMoved = false;
         blackKingMoved = false;
         whiteLeftRookMoved = false;
@@ -1715,7 +1623,6 @@ public class GameManager : MonoBehaviour
         whiteRightRookMoved = false;
         blackRightRookMoved = false;
 
-        // Clear trails and buttons
         foreach (GameObject trail in trailList)
         {
             if (trail != null)
@@ -1733,23 +1640,19 @@ public class GameManager : MonoBehaviour
         trailList.Clear();
         ClearActivePlaceButtons();
 
-        // Reset board to initial position
         chessBoard = new char[8, 8];
         playAsWhiteStatic = playAsWhite;
         System.Array.Copy(playAsWhite ? initialBoardWhite : initialBoardBlack, chessBoard, initialBoardWhite.Length);
 
-        // Recreate pieces
         RemoveAllPieces();
         InitPieces();
 
-        //Debug.Log("Game restarted");
     }
 
     public void MakeGameMove(int fromRow, int fromCol, int toRow, int toCol)
     {
         char piece = chessBoard[fromRow, fromCol];
 
-        // Track en passant opportunity for actual game moves
         if (char.ToLower(piece) == 'p' && Math.Abs(toRow - fromRow) == 2)
         {
             enPassantCol = toCol;
