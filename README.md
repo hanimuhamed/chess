@@ -1,8 +1,6 @@
 # Unity Chess Engine
 
-A simple 2D chess engine built in Unity.  
-This project is a personal experiment to build a functional chess bot using Minimax with Alpha-Beta pruning and a fully working move logic system.  
-This entire project was done independently with no guidance and was inspired by [Sebastian Lague Chess Adventures](https://www.youtube.com/watch?v=U4ogK0MIzqk), particularly the [Minimax Video](https://www.youtube.com/watch?v=l-hh51ncgDI&t=5s)
+A simple 2D chess engine built in Unity C# from scratch. This project is a personal experiment to build a functional chess bot using Minimax with Alpha-Beta pruning and a fully working move logic system. This entire project was done independently with no guidance and was inspired by [Sebastian Lague Chess Adventures](https://www.youtube.com/watch?v=U4ogK0MIzqk), particularly the [Minimax Video](https://www.youtube.com/watch?v=l-hh51ncgDI&t=5s)
 
 ## Engine Strength
 
@@ -27,11 +25,6 @@ This entire project was done independently with no guidance and was inspired by 
 - Depth Limit: Adjustable, practically capped at 3 for performance  
 - Implementation: Built in Unity 2D  
 - Rules: Supports standard chess rules including castling, en passant, and promotion
-
-## Code Quality Disclaimer
-
-The code works as intended but is messy and not well structured.  
-It is not refactored and I have avoided changing it further since it already behaves the way I want.
 
 ## Download
 
@@ -61,6 +54,11 @@ All testing has been done through gameplay to verify that:
 - All legal moves are supported
 - Engine responds correctly
 - Opening moves are applied as intended
+
+## Code Quality Disclaimer
+
+The code works as intended but is messy and not well structured.  
+It is not refactored and I have avoided changing it further since it already behaves the way I want.
 
 ## Roadmap
 
