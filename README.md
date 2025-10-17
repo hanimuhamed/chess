@@ -37,8 +37,8 @@ It is not refactored and I have avoided changing it further since it already beh
 
 You can download the last working builds of the game here:
 
-- [Windows build (7z)](https://github.com/hanimuhamed/chess/releases/download/v1.0.0/chess1.0.0-windows.7z)  
-- [Linux build (7z)](https://github.com/hanimuhamed/chess/releases/download/v1.0.0/chess1.0.0-linux.7z)
+- [Windows build (7z)](https://github.com/hanimuhamed/chess/releases/download/v1.0.0/chess-v1.0.0-windows.7z)  
+- [Linux build (7z)](https://github.com/hanimuhamed/chess/releases/download/v1.0.0/chess-v1.0.0-linux.7z)
 
 Unzip the archive for your platform and run the executable to play.
 
